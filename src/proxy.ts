@@ -1,5 +1,6 @@
-import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 const adminPaths = ["/admin", "/api/admin"];
 const studentPaths = ["/student", "/api/student"];
@@ -10,36 +11,42 @@ function pathnameStartsWith(pathname: string, prefixes: string[]): boolean {
   );
 }
 
-export default auth((req) => {
-  const { pathname } = req.nextUrl;
-  const session = req.auth;
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
 
   if (pathnameStartsWith(pathname, adminPaths)) {
-    if (!session) {
-      const signInUrl = new URL("/auth/signin", req.nextUrl.origin);
+    if (!token) {
+      const signInUrl = new URL("/auth/signin", request.nextUrl.origin);
       signInUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(signInUrl);
     }
 
-    if (
-      session.user.role !== "ADMIN" &&
-      session.user.role !== "SUPER_ADMIN"
-    ) {
-      return NextResponse.redirect(new URL("/", req.nextUrl.origin));
+    if (token.role !== "ADMIN" && token.role !== "SUPER_ADMIN") {
+      return NextResponse.redirect(new URL("/", request.nextUrl.origin));
     }
   }
 
   if (pathnameStartsWith(pathname, studentPaths)) {
-    if (!session) {
-      const signInUrl = new URL("/auth/signin", req.nextUrl.origin);
+    if (!token) {
+      const signInUrl = new URL("/auth/signin", request.nextUrl.origin);
       signInUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(signInUrl);
     }
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
-  matcher: ["/admin/:path*", "/student/:path*", "/api/admin/:path*", "/api/student/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/student/:path*",
+    "/api/admin/:path*",
+    "/api/student/:path*",
+  ],
 };
