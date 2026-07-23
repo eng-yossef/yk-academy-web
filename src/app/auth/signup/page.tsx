@@ -25,6 +25,15 @@ export default function SignUpPage() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout>>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +68,7 @@ export default function SignUpPage() {
       }
 
       setSuccess("Account created successfully! Redirecting to sign in...");
-      setTimeout(() => router.push("/auth/signin"), 1500);
+      timeoutRef.current = setTimeout(() => router.push("/auth/signin"), 1500);
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);
@@ -110,6 +119,7 @@ export default function SignUpPage() {
                 id="name"
                 placeholder="John Doe"
                 required
+                autoComplete="name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
@@ -124,6 +134,7 @@ export default function SignUpPage() {
                 type="email"
                 placeholder="you@example.com"
                 required
+                autoComplete="email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
@@ -139,6 +150,7 @@ export default function SignUpPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Min. 6 characters"
                   required
+                  autoComplete="new-password"
                   value={form.password}
                   onChange={(e) =>
                     setForm({ ...form, password: e.target.value })
@@ -169,6 +181,7 @@ export default function SignUpPage() {
                   type={showConfirm ? "text" : "password"}
                   placeholder="Repeat your password"
                   required
+                  autoComplete="new-password"
                   value={form.confirmPassword}
                   onChange={(e) =>
                     setForm({ ...form, confirmPassword: e.target.value })

@@ -76,11 +76,21 @@ export default function ContactPage() {
     message: "",
   });
   const [submitted, setSubmitted] = React.useState(false);
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout>>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 4000);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setSubmitted(false), 4000);
     setForm({ name: "", email: "", phone: "", subject: "", message: "" });
   };
 

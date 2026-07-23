@@ -61,7 +61,7 @@ export const SITE_CONFIG = {
   name: APP_NAME,
   description: APP_DESCRIPTION,
   url: APP_URL,
-  ogImage: `${APP_URL}/og.png`,
+  ogImage: `${APP_URL}/og.svg`,
   email: "info@ykacademy.com",
   phone: "+1 (555) 123-4567",
   address: "123 Education Street, Learning City, LC 12345",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -75,6 +75,8 @@ export default function StudentCourseLearningPage() {
   const [activePanel, setActivePanel] = useState<"notes" | "discussion">("notes");
   const [notes, setNotes] = useState<Note[]>([]);
   const [noteText, setNoteText] = useState("");
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   const [discussions] = useState<DiscussionPost[]>([
     { id: "1", author: "Ali", content: "Can someone explain the difference between useEffect and useLayoutEffect?", createdAt: "2026-07-22T10:00:00Z", replies: 3 },
     { id: "2", author: "Sara", content: "Great lesson! Very clear explanation.", createdAt: "2026-07-21T15:30:00Z", replies: 1 },
@@ -190,6 +192,13 @@ export default function StudentCourseLearningPage() {
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
+  const handleLessonClick = (lessonId: string) => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setActiveLessonId(lessonId);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -228,9 +237,16 @@ export default function StudentCourseLearningPage() {
           >
             {activeLesson?.videoUrl ? (
               <video
+                ref={videoRef}
                 src={activeLesson.videoUrl}
                 controls
                 className="h-full w-full rounded-xl"
+                onError={(e) => {
+                  const error = (e.target as HTMLVideoElement).error;
+                  if (error && error.code !== 3) {
+                    console.error('Video error:', error.message);
+                  }
+                }}
               />
             ) : (
               <div className="flex h-full flex-col items-center justify-center text-white/70">
@@ -370,7 +386,7 @@ export default function StudentCourseLearningPage() {
                       {mod.lessons.map((lesson) => (
                         <button
                           key={lesson.id}
-                          onClick={() => setActiveLessonId(lesson.id)}
+                          onClick={() => handleLessonClick(lesson.id)}
                           className={cn(
                             "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors",
                             activeLessonId === lesson.id

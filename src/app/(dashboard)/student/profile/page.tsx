@@ -200,6 +200,7 @@ export default function StudentProfilePage() {
                   value={profile.name}
                   onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
                   placeholder="Your name"
+                  autoComplete="name"
                 />
               </div>
               <div className="space-y-2">
@@ -213,6 +214,7 @@ export default function StudentProfilePage() {
                   value={profile.email}
                   onChange={(e) => setProfile((p) => ({ ...p, email: e.target.value }))}
                   placeholder="your@email.com"
+                  autoComplete="email"
                 />
               </div>
               <div className="space-y-2">
@@ -225,6 +227,7 @@ export default function StudentProfilePage() {
                   value={profile.phone}
                   onChange={(e) => setProfile((p) => ({ ...p, phone: e.target.value }))}
                   placeholder="+1 (555) 000-0000"
+                  autoComplete="tel"
                 />
               </div>
             </div>
@@ -264,6 +267,7 @@ export default function StudentProfilePage() {
                   type="password"
                   value={password.current}
                   onChange={(e) => setPassword((p) => ({ ...p, current: e.target.value }))}
+                  autoComplete="current-password"
                 />
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -274,6 +278,7 @@ export default function StudentProfilePage() {
                     type="password"
                     value={password.new}
                     onChange={(e) => setPassword((p) => ({ ...p, new: e.target.value }))}
+                    autoComplete="new-password"
                   />
                 </div>
                 <div className="space-y-2">
@@ -283,6 +288,7 @@ export default function StudentProfilePage() {
                     type="password"
                     value={password.confirm}
                     onChange={(e) => setPassword((p) => ({ ...p, confirm: e.target.value }))}
+                    autoComplete="new-password"
                   />
                 </div>
               </div>

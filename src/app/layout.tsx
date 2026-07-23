@@ -64,11 +64,8 @@ export const metadata: Metadata = {
     creator: "@ykacademy",
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: "/favicon.svg",
   },
-  manifest: "/site.webmanifest",
   robots: {
     index: true,
     follow: true,

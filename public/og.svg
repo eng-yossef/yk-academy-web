@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#071226"/>
+      <stop offset="100%" style="stop-color:#0C1F4F"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1976FF"/>
+      <stop offset="100%" style="stop-color:#00C2FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect x="60" y="260" width="120" height="8" rx="4" fill="url(#accent)"/>
+  <text x="60" y="240" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="bold" fill="white">YK Academy</text>
+  <text x="60" y="320" font-family="Arial, Helvetica, sans-serif" font-size="32" fill="#94a3b8">Master Programming &amp; AI</text>
+  <text x="60" y="380" font-family="Arial, Helvetica, sans-serif" font-size="24" fill="#64748b">Egypt's Premier Tech Education Platform</text>
+  <circle cx="1050" cy="150" r="180" fill="#1976FF" opacity="0.1"/>
+  <circle cx="1100" cy="450" r="120" fill="#00C2FF" opacity="0.08"/>
+  <text x="60" y="540" font-family="Arial, Helvetica, sans-serif" font-size="20" fill="#475569">yk-academy-web.vercel.app</text>
+</svg>

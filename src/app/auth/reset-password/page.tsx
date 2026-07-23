@@ -164,6 +164,7 @@ export default function ResetPasswordPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Min. 6 characters"
                   required
+                  autoComplete="new-password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="pr-10"
@@ -192,6 +193,7 @@ export default function ResetPasswordPage() {
                   type={showConfirm ? "text" : "password"}
                   placeholder="Repeat your password"
                   required
+                  autoComplete="new-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="pr-10"
