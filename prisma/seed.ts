@@ -1,7 +1,7 @@
-import { PrismaClient, Role, CourseLevel, BlogStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { Pool } from "pg";
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
@@ -10,321 +10,206 @@ async function hashPassword(password: string): Promise<string> {
 async function main() {
   console.log("Seeding database...");
 
-  // ─── Admin User ───────────────────────────
-  const adminPassword = await hashPassword("admin");
-  const admin = await prisma.user.upsert({
-    where: { email: "yossefkhaled551@gmail.com" },
-    update: {},
-    create: {
-      email: "yossefkhaled551@gmail.com",
-      name: "Eng. Youssef Khaled",
-      password: adminPassword,
-      role: Role.SUPER_ADMIN,
-      emailVerified: new Date(),
-      isActive: true,
-    },
-  });
-  console.log(`Admin user created: ${admin.email}`);
+  const client = await pool.connect();
+  try {
+    // Admin User
+    const adminPassword = await hashPassword("admin");
+    await client.query(`
+      INSERT INTO "User" (id, email, password, name, "nameAr", role, "emailVerified", "isActive", "createdAt", "updatedAt")
+      VALUES (
+        gen_random_uuid(),
+        'yossefkhaled551@gmail.com',
+        $1,
+        'Eng. Youssef Khaled',
+        'م. يوسف خالد',
+        'SUPER_ADMIN',
+        NOW(),
+        true,
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT (email) DO UPDATE SET password = $1, name = 'Eng. Youssef Khaled', role = 'SUPER_ADMIN'
+    `, [adminPassword]);
+    console.log("  Admin user created/updated");
 
-  // ─── Course Categories ────────────────────
-  const categoriesData = [
-    {
-      name: "Programming",
-      nameAr: "البرمجة",
-      slug: "programming",
-      description: "Master programming languages and software development",
-      icon: "Code2",
-      color: "#2563eb",
-      order: 1,
-    },
-    {
-      name: "Artificial Intelligence",
-      nameAr: "الذكاء الاصطناعي",
-      slug: "artificial-intelligence",
-      description: "Learn AI, machine learning, and deep learning",
-      icon: "Brain",
-      color: "#06b6d4",
-      order: 2,
-    },
-    {
-      name: "Web Development",
-      nameAr: "تطوير المواقع",
-      slug: "web-development",
-      description: "Build modern web applications from scratch",
-      icon: "Globe",
-      color: "#10b981",
-      order: 3,
-    },
-    {
-      name: "Mobile Development",
-      nameAr: "تطوير التطبيقات",
-      slug: "mobile-development",
-      description: "Create mobile apps for iOS and Android",
-      icon: "Smartphone",
-      color: "#8b5cf6",
-      order: 4,
-    },
-  ];
+    // Course Categories
+    const categories = [
+      { name: "Programming", nameAr: "البرمجة", slug: "programming", icon: "Code2", color: "#1976FF" },
+      { name: "Artificial Intelligence", nameAr: "الذكاء الاصطناعي", slug: "artificial-intelligence", icon: "Brain", color: "#00C2FF" },
+      { name: "Web Development", nameAr: "تطوير الويب", slug: "web-development", icon: "Globe", color: "#2DA6FF" },
+      { name: "Mobile Development", nameAr: "تطوير التطبيقات", slug: "mobile-development", icon: "Smartphone", color: "#0C1F4F" },
+    ];
 
-  const categories = [];
-  for (const cat of categoriesData) {
-    const category = await prisma.courseCategory.upsert({
-      where: { slug: cat.slug },
-      update: { name: cat.name, nameAr: cat.nameAr, description: cat.description, icon: cat.icon, color: cat.color, order: cat.order },
-      create: cat,
-    });
-    categories.push(category);
-  }
-  console.log(`${categories.length} categories created`);
+    for (const cat of categories) {
+      await client.query(`
+        INSERT INTO "CourseCategory" (id, name, "nameAr", slug, icon, color, "order", "isActive", "createdAt", "updatedAt")
+        VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, 0, true, NOW(), NOW())
+        ON CONFLICT (slug) DO NOTHING
+      `, [cat.name, cat.nameAr, cat.slug, cat.icon, cat.color]);
+    }
+    console.log("  Course categories created");
 
-  // ─── Courses ──────────────────────────────
-  const programmingCat = categories.find((c) => c.slug === "programming")!;
-  const aiCat = categories.find((c) => c.slug === "artificial-intelligence")!;
-  const webCat = categories.find((c) => c.slug === "web-development")!;
+    // Get category IDs
+    const catResult = await client.query(`SELECT id, slug FROM "CourseCategory"`);
+    const catMap: Record<string, string> = {};
+    for (const row of catResult.rows) {
+      catMap[row.slug] = row.id;
+    }
 
-  const coursesData = [
-    {
-      title: "Python Programming Masterclass",
-      titleAr: "دورة شاملة في برمجة بايثون",
-      slug: "python-programming-masterclass",
-      description:
-        "Comprehensive Python course covering fundamentals, OOP, data structures, and real-world projects. Perfect for beginners and intermediate developers.",
-      shortDescription: "Learn Python from scratch with hands-on projects",
-      level: CourseLevel.BEGINNER,
-      price: 0,
-      isFree: true,
-      isPublished: true,
-      isFeatured: true,
-      language: "ar",
-      tags: ["python", "programming", "beginner"],
-      requirements: ["Basic computer skills", "Internet connection"],
-      learningOutcomes: [
-        "Write Python programs from scratch",
-        "Understand OOP concepts",
-        "Work with data structures",
-        "Build real-world projects",
-      ],
-      prerequisites: [],
-      duration: 40,
-      categoryId: programmingCat.id,
-      instructorId: admin.id,
-      modules: {
-        create: [
-          {
-            title: "Python Basics",
-            description: "Get started with Python fundamentals",
-            order: 1,
-            isPublished: true,
-            lessons: {
-              create: [
-                { title: "Introduction to Python", order: 1, isFree: true, isPublished: true, duration: 15, description: "What is Python and why learn it" },
-                { title: "Setting Up Your Environment", order: 2, isFree: true, isPublished: true, duration: 10, description: "Install Python and VS Code" },
-                { title: "Variables and Data Types", order: 3, isPublished: true, duration: 20, description: "Understanding variables, strings, and numbers" },
-                { title: "Control Flow", order: 4, isPublished: true, duration: 25, description: "If statements, loops, and conditionals" },
-              ],
-            },
-          },
-          {
-            title: "Object-Oriented Programming",
-            description: "Master OOP in Python",
-            order: 2,
-            isPublished: true,
-            lessons: {
-              create: [
-                { title: "Classes and Objects", order: 1, isPublished: true, duration: 30, description: "Creating and using classes" },
-                { title: "Inheritance and Polymorphism", order: 2, isPublished: true, duration: 25, description: "Advanced OOP concepts" },
-                { title: "Magic Methods", order: 3, isPublished: true, duration: 20, description: "Dunder methods and operator overloading" },
-              ],
-            },
-          },
-        ],
+    // Get admin user ID
+    const adminResult = await client.query(`SELECT id FROM "User" WHERE email = 'yossefkhaled551@gmail.com'`);
+    const adminId = adminResult.rows[0]?.id;
+
+    // Sample Courses
+    const courses = [
+      {
+        title: "Python Programming Fundamentals",
+        titleAr: "أساسيات البرمجة بلغة بايثون",
+        slug: "python-fundamentals",
+        description: "Master Python from basics to advanced concepts. Learn data types, control flow, functions, OOP, and more.",
+        shortDescription: "Learn Python programming from scratch",
+        category: "programming",
+        level: "BEGINNER",
+        duration: 40,
+        price: 0,
+        isFree: true,
+        isPublished: true,
+        isFeatured: true,
       },
-    },
-    {
-      title: "Machine Learning with Python",
-      titleAr: "التعلم الآلي باستخدام بايثون",
-      slug: "machine-learning-with-python",
-      description:
-        "Dive into machine learning with scikit-learn, TensorFlow, and real datasets. Learn regression, classification, clustering, and neural networks.",
-      shortDescription: "Build intelligent systems with ML algorithms",
-      level: CourseLevel.INTERMEDIATE,
-      price: 499,
-      discountPrice: 399,
-      isPublished: true,
-      isFeatured: true,
-      language: "ar",
-      tags: ["machine-learning", "python", "AI", "data-science"],
-      requirements: ["Python basics", "High school math"],
-      learningOutcomes: [
-        "Understand ML algorithms",
-        "Build prediction models",
-        "Work with real datasets",
-        "Deploy ML models",
-      ],
-      prerequisites: ["Python Programming Masterclass"],
-      duration: 60,
-      categoryId: aiCat.id,
-      instructorId: admin.id,
-      modules: {
-        create: [
-          {
-            title: "Introduction to ML",
-            description: "Foundations of machine learning",
-            order: 1,
-            isPublished: true,
-            lessons: {
-              create: [
-                { title: "What is Machine Learning?", order: 1, isFree: true, isPublished: true, duration: 15, description: "Overview of ML concepts" },
-                { title: "Types of ML", order: 2, isPublished: true, duration: 20, description: "Supervised, unsupervised, and reinforcement learning" },
-                { title: "Setting Up ML Environment", order: 3, isPublished: true, duration: 15, description: "Installing libraries" },
-              ],
-            },
-          },
-          {
-            title: "Supervised Learning",
-            description: "Regression and classification algorithms",
-            order: 2,
-            isPublished: true,
-            lessons: {
-              create: [
-                { title: "Linear Regression", order: 1, isPublished: true, duration: 30, description: "Fitting lines to data" },
-                { title: "Logistic Regression", order: 2, isPublished: true, duration: 25, description: "Binary classification" },
-                { title: "Decision Trees", order: 3, isPublished: true, duration: 25, description: "Tree-based models" },
-              ],
-            },
-          },
-        ],
+      {
+        title: "JavaScript & React Masterclass",
+        titleAr: "دورة جافاسكريبت وريأكت الشاملة",
+        slug: "javascript-react-masterclass",
+        description: "Complete JavaScript and React development course. Build modern web applications from scratch.",
+        shortDescription: "Build modern web apps with JS and React",
+        category: "web-development",
+        level: "INTERMEDIATE",
+        duration: 60,
+        price: 1999,
+        isFree: false,
+        isPublished: true,
+        isFeatured: true,
       },
-    },
-    {
-      title: "Full-Stack Web Development",
-      titleAr: "تطوير الويب الشامل",
-      slug: "full-stack-web-development",
-      description:
-        "Complete web development bootcamp covering HTML, CSS, JavaScript, React, Node.js, databases, and deployment. Build 10+ real projects.",
-      shortDescription: "Become a full-stack developer from zero",
-      level: CourseLevel.BEGINNER,
-      price: 799,
-      discountPrice: 599,
-      isPublished: true,
-      isFeatured: true,
-      language: "ar",
-      tags: ["web-development", "react", "nodejs", "fullstack"],
-      requirements: ["Basic computer skills", "Internet connection"],
-      learningOutcomes: [
-        "Build responsive websites",
-        "Master React and Node.js",
-        "Work with databases",
-        "Deploy applications to production",
-      ],
-      prerequisites: [],
-      duration: 100,
-      categoryId: webCat.id,
-      instructorId: admin.id,
-      modules: {
-        create: [
-          {
-            title: "HTML & CSS Fundamentals",
-            description: "Build the foundation of web development",
-            order: 1,
-            isPublished: true,
-            lessons: {
-              create: [
-                { title: "HTML Essentials", order: 1, isFree: true, isPublished: true, duration: 20, description: "Tags, elements, and structure" },
-                { title: "CSS Styling", order: 2, isFree: true, isPublished: true, duration: 25, description: "Selectors, layout, and responsive design" },
-                { title: "Flexbox & Grid", order: 3, isPublished: true, duration: 30, description: "Modern CSS layout techniques" },
-              ],
-            },
-          },
-          {
-            title: "JavaScript Deep Dive",
-            description: "Master modern JavaScript",
-            order: 2,
-            isPublished: true,
-            lessons: {
-              create: [
-                { title: "JavaScript Basics", order: 1, isPublished: true, duration: 25, description: "Variables, functions, and scope" },
-                { title: "ES6+ Features", order: 2, isPublished: true, duration: 30, description: "Arrow functions, destructuring, modules" },
-                { title: "Async JavaScript", order: 3, isPublished: true, duration: 30, description: "Promises, async/await, fetch API" },
-              ],
-            },
-          },
-        ],
+      {
+        title: "AI & Machine Learning Introduction",
+        titleAr: "مقدمة في الذكاء الاصطناعي والتعلم الآلي",
+        slug: "ai-ml-introduction",
+        description: "Introduction to artificial intelligence and machine learning. Understand neural networks, deep learning, and practical AI applications.",
+        shortDescription: "Explore AI and Machine Learning",
+        category: "artificial-intelligence",
+        level: "BEGINNER",
+        duration: 35,
+        price: 2499,
+        isFree: false,
+        isPublished: true,
+        isFeatured: true,
       },
-    },
-  ];
+    ];
 
-  for (const courseData of coursesData) {
-    const { modules: modulesData, ...courseFields } = courseData;
-    const course = await prisma.course.upsert({
-      where: { slug: courseFields.slug },
-      update: courseFields,
-      create: {
-        ...courseFields,
-        modules: modulesData,
-      },
-      include: { modules: true },
-    });
-    console.log(`Course created: ${course.title}`);
+    const courseIds: string[] = [];
+    for (const course of courses) {
+      const result = await client.query(`
+        INSERT INTO "Course" (id, title, "titleAr", slug, description, "shortDescription", "categoryId", "instructorId", level, duration, price, "isFree", "isPublished", "isFeatured", "enrolledCount", rating, "reviewCount", "createdAt", "updatedAt")
+        VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 0, 0, 0, NOW(), NOW())
+        ON CONFLICT (slug) DO NOTHING
+        RETURNING id
+      `, [course.title, course.titleAr, course.slug, course.description, course.shortDescription, catMap[course.category], adminId, course.level, course.duration, course.price, course.isFree, course.isPublished, course.isFeatured]);
+      if (result.rows[0]) courseIds.push(result.rows[0].id);
+    }
+    console.log("  Courses created");
+
+    // Modules and Lessons for Python course
+    if (courseIds[0]) {
+      const modules = [
+        { title: "Getting Started with Python", lessons: ["Introduction to Python", "Setting Up Your Environment", "Your First Python Program", "Python Syntax Basics"] },
+        { title: "Data Types & Variables", lessons: ["Numbers and Strings", "Lists and Tuples", "Dictionaries and Sets", "Type Conversion"] },
+        { title: "Control Flow", lessons: ["If/Else Statements", "For Loops", "While Loops", "Break and Continue"] },
+      ];
+
+      let moduleOrder = 1;
+      for (const mod of modules) {
+        const modResult = await client.query(`
+          INSERT INTO "Module" (id, title, "courseId", "order", "isPublished", "createdAt", "updatedAt")
+          VALUES (gen_random_uuid(), $1, $2, $3, true, NOW(), NOW()) RETURNING id
+        `, [mod.title, courseIds[0], moduleOrder++]);
+        const moduleId = modResult.rows[0]?.id;
+
+        if (moduleId) {
+          let lessonOrder = 1;
+          for (const lessonTitle of mod.lessons) {
+            await client.query(`
+              INSERT INTO "Lesson" (id, title, "moduleId", "order", "isFree", "isPublished", duration, "createdAt", "updatedAt")
+              VALUES (gen_random_uuid(), $1, $2, $3, true, true, 15, NOW(), NOW())
+            `, [lessonTitle, moduleId, lessonOrder++]);
+          }
+        }
+      }
+      console.log("  Python course modules and lessons created");
+    }
+
+    // FAQs
+    const faqs = [
+      { question: "What courses does YK Academy offer?", answer: "We offer courses in Programming, Artificial Intelligence, Web Development, and Mobile Development. Our courses range from beginner to advanced levels.", category: "General", order: 1 },
+      { question: "Are the courses online or offline?", answer: "We offer both online and offline learning options. You can choose the format that works best for you.", category: "General", order: 2 },
+      { question: "Do I get a certificate after completing a course?", answer: "Yes! Upon successful completion of a course, you receive a professional certificate from YK Academy that you can share on LinkedIn and your resume.", category: "Courses", order: 3 },
+      { question: "What is the refund policy?", answer: "We offer a 30-day money-back guarantee on all paid courses. If you're not satisfied, contact us for a full refund.", category: "Payment", order: 4 },
+      { question: "Can I access course materials after completion?", answer: "Yes, you have lifetime access to all course materials, including future updates.", category: "Courses", order: 5 },
+      { question: "How do I contact support?", answer: "You can reach us via email at support@ykacademy.com, WhatsApp, or through the contact form on our website.", category: "Support", order: 6 },
+    ];
+
+    for (const faq of faqs) {
+      await client.query(`
+        INSERT INTO "FAQ" (id, question, answer, category, "order", "isActive", "createdAt", "updatedAt")
+        VALUES (gen_random_uuid(), $1, $2, $3, $4, true, NOW(), NOW())
+      `, [faq.question, faq.answer, faq.category, faq.order]);
+    }
+    console.log("  FAQs created");
+
+    // Testimonials
+    const testimonials = [
+      { name: "Ahmed Hassan", role: "Software Engineer", content: "YK Academy transformed my career. The Python course was incredibly well-structured and the instructors are amazing.", rating: 5, isFeatured: true },
+      { name: "Fatima Ali", role: "Data Scientist", content: "The AI course gave me a solid foundation in machine learning. I landed my dream job thanks to the skills I learned here.", rating: 5, isFeatured: true },
+      { name: "Omar Mohamed", role: "Web Developer", content: "Best investment in my education. The React masterclass is comprehensive and practical.", rating: 5, isFeatured: true },
+      { name: "Layla Ibrahim", role: "Student", content: "The teaching quality is outstanding. Complex concepts are explained in a way that's easy to understand.", rating: 4, isFeatured: true },
+    ];
+
+    for (const t of testimonials) {
+      await client.query(`
+        INSERT INTO "Testimonial" (id, name, role, content, rating, "isFeatured", "isActive", "createdAt", "updatedAt")
+        VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, true, NOW(), NOW())
+      `, [t.name, t.role, t.content, t.rating, t.isFeatured]);
+    }
+    console.log("  Testimonials created");
+
+    // Site Settings
+    const settings = [
+      { key: "site_name", value: "YK Academy", group: "general", type: "STRING" },
+      { key: "site_description", value: "Premier programming and AI education platform", group: "general", type: "STRING" },
+      { key: "contact_email", value: "contact@ykacademy.com", group: "contact", type: "STRING" },
+      { key: "contact_phone", value: "+20 100 000 0000", group: "contact", type: "STRING" },
+      { key: "contact_address", value: "Cairo, Egypt", group: "contact", type: "STRING" },
+      { key: "whatsapp", value: "+201000000000", group: "contact", type: "STRING" },
+      { key: "facebook", value: "https://facebook.com/ykacademy", group: "social", type: "STRING" },
+      { key: "youtube", value: "https://youtube.com/@ykacademy", group: "social", type: "STRING" },
+    ];
+
+    for (const s of settings) {
+      await client.query(`
+        INSERT INTO "SiteSetting" (id, "key", value, "group", type, "updatedAt")
+        VALUES (gen_random_uuid(), $1, $2, $3, $4, NOW())
+        ON CONFLICT ("key") DO UPDATE SET value = $2
+      `, [s.key, s.value, s.group, s.type]);
+    }
+    console.log("  Site settings created");
+
+    console.log("\nDatabase seeded successfully!");
+  } finally {
+    client.release();
+    await pool.end();
   }
-
-  // ─── FAQ Items ────────────────────────────
-  const faqsData = [
-    { question: "What courses does YK Academy offer?", answer: "We offer courses in programming, AI, web development, and mobile development. Our courses range from beginner to advanced levels.", category: "general", order: 1 },
-    { question: "Are the courses available in Arabic?", answer: "Yes! All our courses are taught in Arabic with English technical terms to help you learn in your native language.", category: "general", order: 2 },
-    { question: "Can I get a certificate after completing a course?", answer: "Yes, you receive a verified certificate upon completing all course modules and passing the final assessment.", category: "courses", order: 3 },
-    { question: "Do you offer payment plans?", answer: "Yes, we offer flexible payment plans for paid courses. You can split the cost into monthly installments.", category: "pricing", order: 4 },
-    { question: "How do I access course materials?", answer: "Once enrolled, you can access all course materials through your student dashboard, including videos, documents, and assignments.", category: "courses", order: 5 },
-    { question: "Can I get a refund if I'm not satisfied?", answer: "We offer a 14-day money-back guarantee for paid courses if you're not satisfied with the content.", category: "pricing", order: 6 },
-  ];
-
-  for (const faq of faqsData) {
-    await prisma.fAQ.create({ data: faq });
-  }
-  console.log(`${faqsData.length} FAQ items created`);
-
-  // ─── Testimonials ─────────────────────────
-  const testimonialsData = [
-    { name: "Ahmed Mohamed", role: "Software Developer", content: "YK Academy transformed my career. The Python course was comprehensive and the projects really helped me land my first developer job.", rating: 5, isFeatured: true },
-    { name: "Fatma Hassan", role: "Computer Science Student", content: "The best online learning platform I've used. The Arabic courses make it so much easier to understand complex topics.", rating: 5, isFeatured: true },
-    { name: "Omar Ibrahim", role: "Data Analyst", content: "The Machine Learning course was exactly what I needed. The instructor explains everything clearly with real-world examples.", rating: 5, isFeatured: true },
-    { name: "Nour El-Din", role: "Freelance Developer", content: "I went from knowing nothing about web development to building full-stack applications. Thank you, YK Academy!", rating: 5, isFeatured: true },
-  ];
-
-  for (const testimonial of testimonialsData) {
-    await prisma.testimonial.create({ data: testimonial });
-  }
-  console.log(`${testimonialsData.length} testimonials created`);
-
-  // ─── Site Settings ────────────────────────
-  const settingsData = [
-    { key: "site_name", value: "YK Academy", type: "STRING" as const, group: "general" },
-    { key: "site_description", value: "Online learning platform for technology and programming courses", type: "STRING" as const, group: "general" },
-    { key: "site_email", value: "info@ykacademy.com", type: "STRING" as const, group: "contact" },
-    { key: "site_phone", value: "+20 100 000 0000", type: "STRING" as const, group: "contact" },
-    { key: "site_address", value: "Cairo, Egypt", type: "STRING" as const, group: "contact" },
-    { key: "footer_text", value: "2024 YK Academy. All rights reserved.", type: "STRING" as const, group: "general" },
-    { key: "hero_title", value: "Master Programming & AI", type: "STRING" as const, group: "home" },
-    { key: "hero_subtitle", value: "Join thousands of students learning technology with YK Academy", type: "STRING" as const, group: "home" },
-  ];
-
-  for (const setting of settingsData) {
-    await prisma.siteSetting.upsert({
-      where: { key: setting.key },
-      update: { value: setting.value },
-      create: setting,
-    });
-  }
-  console.log(`${settingsData.length} site settings created`);
-
-  console.log("Seed completed successfully!");
 }
 
-main()
-  .catch((e) => {
-    console.error("Seed failed:", e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().catch((e) => {
+  console.error("Seed failed:", e);
+  process.exit(1);
+});
