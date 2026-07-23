@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 
 function slugify(text: string) {
   return text
@@ -56,7 +57,23 @@ export default function NewBlogPostPage() {
     }));
   };
 
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!form.title.trim()) e.title = "Title is required";
+    else if (form.title.trim().length < 5) e.title = "Title must be at least 5 characters";
+    else if (form.title.trim().length > 200) e.title = "Title must be at most 200 characters";
+    if (!form.content.trim() || form.content === "<p></p>") e.content = "Content is required";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
   const handleSave = async (publish: boolean) => {
+    if (!validate()) {
+      toast({ title: "Validation Error", description: "Please fix the errors below", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch("/api/admin/blog", {
@@ -121,26 +138,31 @@ export default function NewBlogPostPage() {
             <div className="rounded-xl border border-light-gray bg-white p-6 shadow-sm">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Title</Label>
+                  <Label>Title *</Label>
                   <Input
                     placeholder="Enter post title..."
                     value={form.title}
                     onChange={(e) => handleTitleChange(e.target.value)}
-                    className="text-lg"
+                    required
+                    minLength={5}
+                    maxLength={200}
+                    className={cn("text-lg", errors.title && "border-destructive")}
                   />
+                  {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Slug</Label>
                   <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Content</Label>
+                  <Label>Content *</Label>
                   <RichTextEditor
                     value={form.content}
                     onChange={(v) => setForm({ ...form, content: v })}
                     placeholder="Write your post content..."
                     minHeight={400}
                   />
+                  {errors.content && <p className="text-sm text-destructive">{errors.content}</p>}
                 </div>
               </div>
             </div>

@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { cn } from "@/lib/utils";
 
 interface Settings {
   siteName: string;
@@ -85,7 +87,28 @@ export default function AdminSettingsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!settings.siteName.trim()) e.siteName = "Site name is required";
+    if (settings.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(settings.contactEmail)) e.contactEmail = "Invalid email format";
+    if (settings.smtpPort && (isNaN(Number(settings.smtpPort)) || Number(settings.smtpPort) < 1 || Number(settings.smtpPort) > 65535)) e.smtpPort = "Invalid port number";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
   const handleSave = async () => {
+    if (!validate()) {
+      toast({ title: "Validation Error", description: "Please fix the errors below", variant: "destructive" });
+      return;
+    }
+    setConfirmOpen(true);
+  };
+
+  const confirmSave = async () => {
+    setConfirmOpen(false);
     setSaving(true);
     try {
       const res = await fetch("/api/admin/settings", {
@@ -147,10 +170,10 @@ export default function AdminSettingsPage() {
             <div className="rounded-xl border border-light-gray bg-white p-6 shadow-sm">
               <h3 className="mb-4 font-semibold text-navy">General Settings</h3>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2"><Label>Site Name</Label><Input value={settings.siteName} onChange={(e) => updateField("siteName", e.target.value)} /></div>
+                <div className="space-y-2"><Label>Site Name *</Label><Input value={settings.siteName} onChange={(e) => updateField("siteName", e.target.value)} className={cn(errors.siteName && "border-destructive")} />{errors.siteName && <p className="text-sm text-destructive">{errors.siteName}</p>}</div>
                 <div className="space-y-2"><Label>Logo URL</Label><Input value={settings.logo} onChange={(e) => updateField("logo", e.target.value)} /></div>
                 <div className="space-y-2 sm:col-span-2"><Label>Description</Label><Textarea rows={2} value={settings.siteDescription} onChange={(e) => updateField("siteDescription", e.target.value)} /></div>
-                <div className="space-y-2"><Label>Contact Email</Label><Input type="email" value={settings.contactEmail} onChange={(e) => updateField("contactEmail", e.target.value)} /></div>
+                <div className="space-y-2"><Label>Contact Email</Label><Input type="email" value={settings.contactEmail} onChange={(e) => updateField("contactEmail", e.target.value)} className={cn(errors.contactEmail && "border-destructive")} />{errors.contactEmail && <p className="text-sm text-destructive">{errors.contactEmail}</p>}</div>
                 <div className="space-y-2"><Label>Phone</Label><Input value={settings.contactPhone} onChange={(e) => updateField("contactPhone", e.target.value)} /></div>
                 <div className="space-y-2 sm:col-span-2"><Label>Address</Label><Input value={settings.address} onChange={(e) => updateField("address", e.target.value)} /></div>
                 <div className="space-y-2"><Label>Currency</Label><Input value={settings.currency} onChange={(e) => updateField("currency", e.target.value)} /></div>
@@ -197,7 +220,7 @@ export default function AdminSettingsPage() {
               <h3 className="mb-4 font-semibold text-navy">SMTP Settings</h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2"><Label>SMTP Host</Label><Input value={settings.smtpHost} onChange={(e) => updateField("smtpHost", e.target.value)} /></div>
-                <div className="space-y-2"><Label>SMTP Port</Label><Input value={settings.smtpPort} onChange={(e) => updateField("smtpPort", e.target.value)} /></div>
+                <div className="space-y-2"><Label>SMTP Port</Label><Input value={settings.smtpPort} onChange={(e) => updateField("smtpPort", e.target.value)} className={cn(errors.smtpPort && "border-destructive")} />{errors.smtpPort && <p className="text-sm text-destructive">{errors.smtpPort}</p>}</div>
                 <div className="space-y-2"><Label>Username</Label><Input value={settings.smtpUser} onChange={(e) => updateField("smtpUser", e.target.value)} /></div>
                 <div className="space-y-2"><Label>Password</Label><Input type="password" value={settings.smtpPass} onChange={(e) => updateField("smtpPass", e.target.value)} /></div>
               </div>
@@ -239,6 +262,16 @@ export default function AdminSettingsPage() {
             </div>
           </TabsContent>
         </Tabs>
+
+        <ConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title="Save Settings"
+          message="Are you sure you want to save these settings? This will update the live site configuration."
+          confirmLabel="Save"
+          onConfirm={confirmSave}
+          loading={saving}
+        />
       </motion.div>
     </DashboardLayout>
   );

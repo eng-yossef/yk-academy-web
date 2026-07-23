@@ -31,13 +31,7 @@
 
 ## Screenshots
 
-| Homepage | Admin Dashboard | Student Dashboard |
-|----------|----------------|-------------------|
-| ![Homepage](screenshots/homepage.png) | ![Admin](screenshots/admin-dashboard.png) | ![Student](screenshots/student-dashboard.png) |
-
-| Course Page | Course Player | Blog |
-|-------------|--------------|------|
-| ![Courses](screenshots/courses.png) | ![Player](screenshots/course-player.png) | ![Blog](screenshots/blog.png) |
+> Screenshots coming soon.
 
 ---
 
@@ -105,7 +99,7 @@
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-org/yk-academy-web.git
+git clone https://github.com/eng-yossef/yk-academy-web.git
 cd yk-academy-web
 ```
 
@@ -157,8 +151,8 @@ yk-academy-web/
 ├── src/
 │   ├── app/
 │   │   ├── (dashboard)/
-│   │   │   ├── admin/           # Admin dashboard pages (18 sections)
-│   │   │   └── student/         # Student dashboard pages (12 sections)
+│   │   │   ├── admin/           # Admin dashboard pages (20 sections)
+│   │   │   └── student/         # Student dashboard pages (13 sections)
 │   │   ├── api/                 # API route handlers
 │   │   │   ├── auth/            # NextAuth catch-all route
 │   │   │   ├── contact/         # Contact form submission
@@ -175,6 +169,7 @@ yk-academy-web/
 │   │   ├── layout.tsx           # Root layout (fonts, theme, session)
 │   │   ├── page.tsx             # Homepage
 │   │   └── globals.css          # Global styles & Tailwind theme
+│   ├── proxy.ts                 # Proxy configuration for external APIs
 │   ├── components/
 │   │   ├── layout/              # Navbar, Footer, Sidebar, DashboardLayout
 │   │   ├── shared/              # Reusable business components

@@ -60,6 +60,7 @@ export default function AdminFAQPage() {
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
   const [refreshKey, setRefreshKey] = React.useState(0);
   const [expanded, setExpanded] = React.useState<Set<string>>(new Set());
+  const [formErrors, setFormErrors] = React.useState<Record<string, string>>({});
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -92,7 +93,19 @@ export default function AdminFAQPage() {
     setDialogOpen(true);
   };
 
+  const validateForm = () => {
+    const e: Record<string, string> = {};
+    if (!form.question.trim()) e.question = "Question is required";
+    if (!form.answer.trim()) e.answer = "Answer is required";
+    setFormErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
   const handleSave = async () => {
+    if (!validateForm()) {
+      toast({ title: "Validation Error", description: "Please fill in all required fields", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
       const url = editing ? `/api/admin/faqs/${editing.id}` : "/api/admin/faqs";
@@ -229,12 +242,14 @@ export default function AdminFAQPage() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Question</Label>
-                <Input value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} />
+                <Label>Question *</Label>
+                <Input value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} className={cn(formErrors.question && "border-destructive")} />
+                {formErrors.question && <p className="text-sm text-destructive">{formErrors.question}</p>}
               </div>
               <div className="space-y-2">
-                <Label>Answer</Label>
-                <Textarea rows={4} value={form.answer} onChange={(e) => setForm({ ...form, answer: e.target.value })} />
+                <Label>Answer *</Label>
+                <Textarea rows={4} value={form.answer} onChange={(e) => setForm({ ...form, answer: e.target.value })} className={cn(formErrors.answer && "border-destructive")} />
+                {formErrors.answer && <p className="text-sm text-destructive">{formErrors.answer}</p>}
               </div>
               <div className="space-y-2">
                 <Label>Category</Label>

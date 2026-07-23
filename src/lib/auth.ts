@@ -14,11 +14,13 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      emailVerified?: Date | null;
     };
   }
 
   interface User {
     role?: string;
+    emailVerified?: Date | null;
   }
 }
 
@@ -26,6 +28,7 @@ declare module "@auth/core/jwt" {
   interface JWT {
     id: string;
     role: string;
+    emailVerified?: string | null;
   }
 }
 
@@ -74,6 +77,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           image: user.image,
           role: user.role,
+          emailVerified: user.emailVerified,
         };
       },
     }),
@@ -83,6 +87,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id ?? "";
         token.role = user.role ?? "STUDENT";
+        token.emailVerified = user.emailVerified
+          ? user.emailVerified.toISOString()
+          : null;
       }
       return token;
     },
@@ -90,6 +97,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token) {
         session.user.id = token.id;
         session.user.role = token.role;
+        session.user.emailVerified = token.emailVerified
+          ? new Date(token.emailVerified)
+          : null;
       }
       return session;
     },

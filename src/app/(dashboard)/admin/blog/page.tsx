@@ -12,6 +12,7 @@ import {
   BarChart3,
   PenTool,
   Tag,
+  Inbox,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { PageHeader } from "@/components/layout/page-header";
@@ -116,6 +117,12 @@ export default function AdminBlogPage() {
 
         {loading ? (
           <div className="space-y-4">{[...Array(5)].map((_, i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-light-gray" />)}</div>
+        ) : posts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-muted-foreground/25 py-16">
+            <Inbox className="h-12 w-12 text-muted-foreground/50" />
+            <p className="mt-4 text-lg font-medium text-muted-foreground">No blog posts yet</p>
+            <p className="text-sm text-muted-foreground/70">Create your first post to get started.</p>
+          </div>
         ) : (
           <Table>
             <TableHeader>

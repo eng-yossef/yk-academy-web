@@ -11,6 +11,7 @@ import {
   Shield,
   ShieldOff,
   Mail,
+  Users,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { PageHeader } from "@/components/layout/page-header";
@@ -63,6 +64,7 @@ export default function AdminUsersPage() {
   const [newUser, setNewUser] = React.useState({ name: "", email: "", role: "STUDENT", password: "" });
   const [creating, setCreating] = React.useState(false);
   const [refreshKey, setRefreshKey] = React.useState(0);
+  const [formErrors, setFormErrors] = React.useState<Record<string, string>>({});
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -78,7 +80,22 @@ export default function AdminUsersPage() {
       .finally(() => setLoading(false));
   }, [search, roleFilter, toast, refreshKey]);
 
+  const validateCreate = () => {
+    const e: Record<string, string> = {};
+    if (!newUser.name.trim()) e.name = "Name is required";
+    if (!newUser.email.trim()) e.email = "Email is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newUser.email)) e.email = "Invalid email format";
+    if (!newUser.password) e.password = "Password is required";
+    else if (newUser.password.length < 8) e.password = "Password must be at least 8 characters";
+    setFormErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
   const handleCreate = async () => {
+    if (!validateCreate()) {
+      toast({ title: "Validation Error", description: "Please fix the errors below", variant: "destructive" });
+      return;
+    }
     setCreating(true);
     try {
       const res = await fetch("/api/admin/users", {
@@ -269,16 +286,19 @@ export default function AdminUsersPage() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Name</Label>
-                <Input value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} />
+                <Label>Name *</Label>
+                <Input value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} className={cn(formErrors.name && "border-destructive")} />
+                {formErrors.name && <p className="text-sm text-destructive">{formErrors.name}</p>}
               </div>
               <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} />
+                <Label>Email *</Label>
+                <Input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} className={cn(formErrors.email && "border-destructive")} />
+                {formErrors.email && <p className="text-sm text-destructive">{formErrors.email}</p>}
               </div>
               <div className="space-y-2">
-                <Label>Password</Label>
-                <Input type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} />
+                <Label>Password *</Label>
+                <Input type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className={cn(formErrors.password && "border-destructive")} />
+                {formErrors.password && <p className="text-sm text-destructive">{formErrors.password}</p>}
               </div>
               <div className="space-y-2">
                 <Label>Role</Label>
@@ -349,5 +369,5 @@ export default function AdminUsersPage() {
 }
 
 function UsersIcon() {
-  return <Mail className="h-8 w-8" />;
+  return <Users className="h-8 w-8" />;
 }

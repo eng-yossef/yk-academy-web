@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { randomUUID } from "crypto";
 import prisma from "@/lib/prisma";
+import { rateLimit } from "@/lib/rate-limit";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -11,6 +13,15 @@ const registerSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get("x-forwarded-for") || "anonymous";
+    const rl = rateLimit(`register:${ip}`, 5, 60000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const parsed = registerSchema.safeParse(body);
 
@@ -44,8 +55,32 @@ export async function POST(request: Request) {
       },
     });
 
+    const verificationToken = randomUUID();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await prisma.activityLog.create({
+      data: {
+        action: "EMAIL_VERIFICATION",
+        entity: "User",
+        entityId: user.id,
+        userId: user.id,
+        details: {
+          token: verificationToken,
+          userId: user.id,
+          expiresAt: expiresAt.toISOString(),
+        },
+      },
+    });
+
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const verificationUrl = `${baseUrl}/auth/verify-email?token=${verificationToken}`;
+    console.log("Email verification URL:", verificationUrl);
+
     return NextResponse.json(
-      { message: "Account created successfully", userId: user.id },
+      {
+        message: "Account created successfully. Please check your email to verify your account.",
+        userId: user.id,
+      },
       { status: 201 }
     );
   } catch {

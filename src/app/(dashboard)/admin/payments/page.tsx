@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Filter, DollarSign, TrendingUp, CreditCard, ArrowDownRight, Download } from "lucide-react";
+import {   Filter, DollarSign, TrendingUp, CreditCard, ArrowDownRight, Download, Inbox } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { PageHeader } from "@/components/layout/page-header";
 import { SearchInput } from "@/components/shared/search-input";
@@ -158,6 +158,12 @@ export default function AdminPaymentsPage() {
             {[...Array(5)].map((_, i) => (
               <div key={i} className="h-16 animate-pulse rounded-xl bg-light-gray" />
             ))}
+          </div>
+        ) : payments.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-muted-foreground/25 py-16">
+            <Inbox className="h-12 w-12 text-muted-foreground/50" />
+            <p className="mt-4 text-lg font-medium text-muted-foreground">No payments found</p>
+            <p className="text-sm text-muted-foreground/70">Transactions will appear here once students start enrolling.</p>
           </div>
         ) : (
           <Table>

@@ -17,6 +17,10 @@ import {
   BarChart3,
   Settings,
   Tag,
+  CheckCircle,
+  Award,
+  Activity,
+  Loader2,
 } from "lucide-react";
 import {
   LineChart,
@@ -35,53 +39,19 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-const revenueData = [
-  { month: "Jan", revenue: 12400 },
-  { month: "Feb", revenue: 18200 },
-  { month: "Mar", revenue: 15600 },
-  { month: "Apr", revenue: 22100 },
-  { month: "May", revenue: 28400 },
-  { month: "Jun", revenue: 31200 },
-  { month: "Jul", revenue: 26800 },
-  { month: "Aug", revenue: 35600 },
-  { month: "Sep", revenue: 32100 },
-  { month: "Oct", revenue: 38900 },
-  { month: "Nov", revenue: 42300 },
-  { month: "Dec", revenue: 45800 },
-];
-
-const enrollmentData = [
-  { month: "Jan", enrollments: 45 },
-  { month: "Feb", enrollments: 62 },
-  { month: "Mar", enrollments: 58 },
-  { month: "Apr", enrollments: 78 },
-  { month: "May", enrollments: 91 },
-  { month: "Jun", enrollments: 85 },
-  { month: "Jul", enrollments: 102 },
-  { month: "Aug", enrollments: 118 },
-  { month: "Sep", enrollments: 95 },
-  { month: "Oct", enrollments: 132 },
-  { month: "Nov", enrollments: 148 },
-  { month: "Dec", enrollments: 160 },
-];
-
-const recentActivity = [
-  { id: 1, action: "New enrollment", detail: "Ahmed enrolled in React Masterclass", time: "2 min ago", icon: UserPlus },
-  { id: 2, action: "Payment received", detail: "SAR 199 from Sara Ali", time: "15 min ago", icon: DollarSign },
-  { id: 3, action: "Course published", detail: "Advanced JavaScript launched", time: "1 hour ago", icon: BookOpen },
-  { id: 4, action: "New user", detail: "Mohamed created an account", time: "2 hours ago", icon: Users },
-  { id: 5, action: "Assignment submitted", detail: "Fatima submitted Week 4 project", time: "3 hours ago", icon: PenTool },
-  { id: 6, action: "Course completed", detail: "Khalid completed HTML Fundamentals", time: "5 hours ago", icon: GraduationCap },
-];
-
-const quickActions = [
-  { label: "Create Course", href: "/admin/courses", icon: BookOpen, color: "bg-electric-blue/10 text-electric-blue" },
-  { label: "Manage Users", href: "/admin/users", icon: Users, color: "bg-emerald-50 text-emerald-600" },
-  { label: "View Payments", href: "/admin/payments", icon: DollarSign, color: "bg-amber-50 text-amber-600" },
-  { label: "Blog Posts", href: "/admin/blog", icon: PenTool, color: "bg-violet-50 text-violet-600" },
-  { label: "Discount Codes", href: "/admin/discounts", icon: Tag, color: "bg-rose-50 text-rose-600" },
-  { label: "Settings", href: "/admin/settings", icon: Settings, color: "bg-cyan/10 text-cyan" },
-];
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  UserPlus,
+  DollarSign,
+  BookOpen,
+  Users,
+  PenTool,
+  GraduationCap,
+  CheckCircle,
+  Award,
+  Activity,
+  Clock,
+  AlertCircle,
+};
 
 const container = {
   hidden: { opacity: 0 },
@@ -93,7 +63,107 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
+interface DashboardStats {
+  totalUsers: number;
+  totalCourses: number;
+  totalEnrollments: number;
+  totalRevenue: number;
+  newUsersThisMonth: number;
+  enrollmentsThisMonth: number;
+  revenueThisMonth: number;
+  publishedCourses: number;
+  pendingReviews: number;
+  activeStudents: number;
+  totalCertificates: number;
+  completionRate: number;
+}
+
+interface ChartData {
+  month: string;
+  revenue?: number;
+  enrollments?: number;
+}
+
+interface ActivityItem {
+  id: string;
+  action: string;
+  detail: string;
+  time: string;
+  icon: string;
+}
+
+function timeAgo(dateStr: string): string {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return formatDate(dateStr);
+}
+
 export default function AdminDashboardPage() {
+  const [stats, setStats] = React.useState<DashboardStats | null>(null);
+  const [revenueData, setRevenueData] = React.useState<ChartData[]>([]);
+  const [enrollmentData, setEnrollmentData] = React.useState<ChartData[]>([]);
+  const [activity, setActivity] = React.useState<ActivityItem[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    fetch("/api/admin/stats")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setStats(data.data.stats);
+          setRevenueData(data.data.charts.revenue);
+          setEnrollmentData(data.data.charts.enrollments);
+          setActivity(data.data.activity);
+        } else {
+          setError(data.error || "Failed to load dashboard");
+        }
+      })
+      .catch(() => setError("Failed to load dashboard"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <DashboardLayout role="admin">
+        <div className="flex h-96 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-electric-blue" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout role="admin">
+        <div className="flex h-96 items-center justify-center">
+          <div className="text-center">
+            <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
+            <p className="mt-4 text-lg font-medium text-navy">{error}</p>
+            <Button onClick={() => window.location.reload()} className="mt-4">Retry</Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const quickActions = [
+    { label: "Create Course", href: "/admin/courses/new", icon: BookOpen, color: "bg-electric-blue/10 text-electric-blue" },
+    { label: "Manage Users", href: "/admin/users", icon: Users, color: "bg-emerald-50 text-emerald-600" },
+    { label: "View Payments", href: "/admin/payments", icon: DollarSign, color: "bg-amber-50 text-amber-600" },
+    { label: "Blog Posts", href: "/admin/blog", icon: PenTool, color: "bg-violet-50 text-violet-600" },
+    { label: "Discount Codes", href: "/admin/discounts", icon: Tag, color: "bg-rose-50 text-rose-600" },
+    { label: "Settings", href: "/admin/settings", icon: Settings, color: "bg-cyan/10 text-cyan" },
+  ];
+
   return (
     <DashboardLayout role="admin">
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
@@ -105,7 +175,7 @@ export default function AdminDashboardPage() {
               {formatDate(new Date())}
             </p>
           </div>
-          <Link href="/admin/courses">
+          <Link href="/admin/courses/new">
             <Button className="gap-2 bg-gradient-to-r from-electric-blue to-cyan text-white shadow-lg shadow-electric-blue/25 hover:shadow-electric-blue/40">
               <BookOpen className="h-4 w-4" />
               New Course
@@ -114,12 +184,12 @@ export default function AdminDashboardPage() {
         </motion.div>
 
         <motion.div variants={item} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          <StatCard icon={<Users className="h-5 w-5" />} label="Total Students" value="1,284" trend={{ value: 12, isPositive: true }} />
-          <StatCard icon={<DollarSign className="h-5 w-5" />} label="Revenue" value={formatCurrency(328400)} trend={{ value: 18, isPositive: true }} />
-          <StatCard icon={<BookOpen className="h-5 w-5" />} label="Active Courses" value="24" trend={{ value: 4, isPositive: true }} />
-          <StatCard icon={<UserPlus className="h-5 w-5" />} label="Enrollments This Month" value="160" trend={{ value: 22, isPositive: true }} />
-          <StatCard icon={<TrendingUp className="h-5 w-5" />} label="Completion Rate" value="87%" trend={{ value: 3, isPositive: true }} />
-          <StatCard icon={<Clock className="h-5 w-5" />} label="Pending Tasks" value="8" trend={{ value: 15, isPositive: false }} />
+          <StatCard icon={<Users className="h-5 w-5" />} label="Total Students" value={stats?.totalUsers?.toLocaleString() || "0"} />
+          <StatCard icon={<DollarSign className="h-5 w-5" />} label="Revenue" value={formatCurrency(stats?.totalRevenue || 0)} />
+          <StatCard icon={<BookOpen className="h-5 w-5" />} label="Active Courses" value={stats?.publishedCourses || 0} />
+          <StatCard icon={<UserPlus className="h-5 w-5" />} label="Enrollments This Month" value={stats?.enrollmentsThisMonth || 0} />
+          <StatCard icon={<TrendingUp className="h-5 w-5" />} label="Completion Rate" value={`${stats?.completionRate || 0}%`} />
+          <StatCard icon={<GraduationCap className="h-5 w-5" />} label="Certificates" value={stats?.totalCertificates || 0} />
         </motion.div>
 
         <motion.div variants={item} className="grid gap-6 lg:grid-cols-2">
@@ -172,18 +242,25 @@ export default function AdminDashboardPage() {
           <div className="rounded-xl border border-light-gray bg-white p-6 shadow-sm lg:col-span-2">
             <h3 className="mb-4 font-semibold text-navy">Recent Activity</h3>
             <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-light-gray">
-                    <activity.icon className="h-4 w-4 text-navy/60" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-navy">{activity.action}</p>
-                    <p className="truncate text-xs text-muted-foreground">{activity.detail}</p>
-                  </div>
-                  <span className="shrink-0 text-xs text-muted-foreground">{activity.time}</span>
-                </div>
-              ))}
+              {activity.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No recent activity</p>
+              ) : (
+                activity.map((act) => {
+                  const Icon = iconMap[act.icon] || Activity;
+                  return (
+                    <div key={act.id} className="flex items-start gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-light-gray">
+                        <Icon className="h-4 w-4 text-navy/60" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-navy">{act.action}</p>
+                        <p className="truncate text-xs text-muted-foreground">{act.detail}</p>
+                      </div>
+                      <span className="shrink-0 text-xs text-muted-foreground">{timeAgo(act.time)}</span>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -208,21 +285,33 @@ export default function AdminDashboardPage() {
         </motion.div>
 
         <motion.div variants={item} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            { label: "Pending Reviews", value: "5", icon: AlertCircle, color: "text-amber-500" },
-            { label: "Active Subscriptions", value: "342", icon: TrendingUp, color: "text-emerald-500" },
-            { label: "Avg. Rating", value: "4.7", icon: BarChart3, color: "text-electric-blue" },
-          ].map((stat) => (
-            <div key={stat.label} className="flex items-center gap-4 rounded-xl border border-light-gray bg-white p-4 shadow-sm">
-              <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-light-gray ${stat.color}`}>
-                <stat.icon className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-xl font-bold text-navy">{stat.value}</p>
-                <p className="text-xs text-muted-foreground">{stat.label}</p>
-              </div>
+          <div className="flex items-center gap-4 rounded-xl border border-light-gray bg-white p-4 shadow-sm">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-light-gray text-amber-500">
+              <AlertCircle className="h-5 w-5" />
             </div>
-          ))}
+            <div>
+              <p className="text-xl font-bold text-navy">{stats?.pendingReviews || 0}</p>
+              <p className="text-xs text-muted-foreground">Pending Reviews</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 rounded-xl border border-light-gray bg-white p-4 shadow-sm">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-light-gray text-emerald-500">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xl font-bold text-navy">{stats?.activeStudents || 0}</p>
+              <p className="text-xs text-muted-foreground">Active Students</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 rounded-xl border border-light-gray bg-white p-4 shadow-sm">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-light-gray text-electric-blue">
+              <BarChart3 className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xl font-bold text-navy">{stats?.totalCourses || 0}</p>
+              <p className="text-xs text-muted-foreground">Total Courses</p>
+            </div>
+          </div>
         </motion.div>
       </motion.div>
     </DashboardLayout>

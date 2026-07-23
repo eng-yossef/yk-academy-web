@@ -39,12 +39,7 @@ export default function StudentDownloadsPage() {
           setDownloads(json.data);
         }
       } catch {
-        setDownloads([
-          { id: "1", title: "React Hooks Cheat Sheet", courseName: "Advanced React Patterns", fileUrl: "/files/hooks-cheatsheet.pdf", fileType: "application/pdf", size: 245000, downloadedAt: "2026-07-22T10:00:00Z" },
-          { id: "2", title: "TypeScript Generics Guide", courseName: "TypeScript Mastery", fileUrl: "/files/generics-guide.pdf", fileType: "application/pdf", size: 180000, downloadedAt: "2026-07-21T15:00:00Z" },
-          { id: "3", title: "Node.js Project Template", courseName: "Node.js Backend", fileUrl: "/files/node-template.zip", fileType: "application/zip", size: 540000, downloadedAt: "2026-07-20T09:00:00Z" },
-          { id: "4", title: "CSS Grid Visual Guide", courseName: "CSS Fundamentals", fileUrl: "/files/css-grid.png", fileType: "image/png", size: 890000, downloadedAt: "2026-07-18T12:00:00Z" },
-        ]);
+        setDownloads([]);
       } finally {
         setLoading(false);
       }

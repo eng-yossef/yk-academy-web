@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Plus, Award, Download, Send, Eye, Trash2 } from "lucide-react";
+import {   Plus, Award, Download, Send, Eye, Trash2, Inbox } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { PageHeader } from "@/components/layout/page-header";
 import { SearchInput } from "@/components/shared/search-input";
@@ -113,6 +113,12 @@ export default function AdminCertificatesPage() {
 
         {loading ? (
           <div className="space-y-4">{[...Array(5)].map((_, i) => <div key={i} className="h-16 animate-pulse rounded-xl bg-light-gray" />)}</div>
+        ) : certificates.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-muted-foreground/25 py-16">
+            <Inbox className="h-12 w-12 text-muted-foreground/50" />
+            <p className="mt-4 text-lg font-medium text-muted-foreground">No certificates issued yet</p>
+            <p className="text-sm text-muted-foreground/70">Issue your first certificate to get started.</p>
+          </div>
         ) : (
           <Table>
             <TableHeader>
@@ -146,10 +152,10 @@ export default function AdminCertificatesPage() {
                   <TableCell className="text-sm text-muted-foreground">{formatDate(cert.issuedAt)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Download">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Download" onClick={() => toast({ title: "PDF generation coming soon" })}>
                         <Download className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Send">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Send" onClick={() => toast({ title: "Email delivery coming soon" })}>
                         <Send className="h-4 w-4" />
                       </Button>
                     </div>

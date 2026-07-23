@@ -187,6 +187,26 @@ export default function AdminTestimonialsPage() {
               <div className="space-y-2"><Label>Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
               <div className="space-y-2"><Label>Role / Title</Label><Input placeholder="e.g. Software Engineer" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} /></div>
               <div className="space-y-2"><Label>Testimonial</Label><Textarea rows={4} value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} /></div>
+              <div className="space-y-2">
+                <Label>Rating</Label>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setForm({ ...form, rating: star })}
+                      className="p-0.5 transition-transform hover:scale-110"
+                    >
+                      <Star
+                        className={cn(
+                          "h-6 w-6 cursor-pointer",
+                          star <= form.rating ? "fill-amber-400 text-amber-400" : "text-gray-200"
+                        )}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-3"><Switch checked={form.isFeatured} onCheckedChange={(v) => setForm({ ...form, isFeatured: v })} /><Label>Featured</Label></div>
                 <div className="flex items-center gap-3"><Switch checked={form.isActive} onCheckedChange={(v) => setForm({ ...form, isActive: v })} /><Label>Active</Label></div>

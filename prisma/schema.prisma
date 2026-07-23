@@ -360,6 +360,7 @@ model Enrollment {
   @@index([userId])
   @@index([courseId])
   @@index([status])
+  @@index([enrolledAt])
 }
 
 model LessonProgress {
@@ -649,6 +650,7 @@ model Payment {
   @@index([enrollmentId])
   @@index([status])
   @@index([transactionId])
+  @@index([createdAt])
 }
 
 model Invoice {

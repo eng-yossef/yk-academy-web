@@ -123,7 +123,7 @@ export default function AdminCoursesPage() {
             icon={<BookOpenIcon />}
             title="No courses found"
             description="Create your first course to get started"
-            action={{ label: "Create Course", onClick: () => {} }}
+            action={{ label: "Create Course", onClick: () => window.location.href = "/admin/courses/new" }}
           />
         ) : (
           <Table>

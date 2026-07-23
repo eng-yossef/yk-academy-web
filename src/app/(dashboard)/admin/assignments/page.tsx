@@ -68,6 +68,7 @@ export default function AdminAssignmentsPage() {
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
   const [submissionsFor, setSubmissionsFor] = React.useState<AssignmentItem | null>(null);
   const [submissions, setSubmissions] = React.useState<{ id: string; student: { name: string; email: string }; grade: number | null; feedback: string | null; status: string; submittedAt: string }[]>([]);
+  const [formErrors, setFormErrors] = React.useState<Record<string, string>>({});
   const { toast } = useToast();
 
   const refetchAssignments = React.useCallback(() => {
@@ -110,7 +111,19 @@ export default function AdminAssignmentsPage() {
     setDialogOpen(true);
   };
 
+  const validateForm = () => {
+    const e: Record<string, string> = {};
+    if (!form.title.trim()) e.title = "Title is required";
+    if (!form.courseId) e.courseId = "Course is required";
+    setFormErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
   const handleSave = async () => {
+    if (!validateForm()) {
+      toast({ title: "Validation Error", description: "Please fill in all required fields", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
       const url = editing ? `/api/admin/assignments/${editing.id}` : "/api/admin/assignments";
@@ -237,7 +250,7 @@ export default function AdminAssignmentsPage() {
               <DialogDescription>{editing ? "Update assignment details" : "Add a new assignment"}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-2"><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={cn(formErrors.title && "border-destructive")} />{formErrors.title && <p className="text-sm text-destructive">{formErrors.title}</p>}</div>
               <div className="space-y-2"><Label>Description</Label><Textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -259,13 +272,14 @@ export default function AdminAssignmentsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Course</Label>
+                  <Label>Course *</Label>
                   <Select value={form.courseId} onValueChange={(v) => setForm({ ...form, courseId: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
+                    <SelectTrigger className={cn(formErrors.courseId && "border-destructive")}><SelectValue placeholder="Select course" /></SelectTrigger>
                     <SelectContent>
                       {courses.map((c) => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  {formErrors.courseId && <p className="text-sm text-destructive">{formErrors.courseId}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Due Date</Label>
