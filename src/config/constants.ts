@@ -83,37 +83,36 @@ export const NAV_ITEMS = [
 ] as const;
 
 export const DASHBOARD_NAV_ITEMS = [
-  { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
-  { label: "My Courses", href: "/dashboard/courses", icon: "BookOpen" },
-  { label: "Assignments", href: "/dashboard/assignments", icon: "FileText" },
-  { label: "Certificates", href: "/dashboard/certificates", icon: "Award" },
-  { label: "Profile", href: "/dashboard/profile", icon: "User" },
-  { label: "Settings", href: "/dashboard/settings", icon: "Settings" },
+  { label: "Dashboard", href: "/student", icon: "LayoutDashboard" },
+  { label: "My Courses", href: "/student/courses", icon: "BookOpen" },
+  { label: "Assignments", href: "/student/assignments", icon: "FileText" },
+  { label: "Certificates", href: "/student/certificates", icon: "Award" },
+  { label: "Profile", href: "/student/profile", icon: "User" },
+  { label: "Settings", href: "/student/profile", icon: "Settings" },
 ] as const;
 
 export const ADMIN_NAV_ITEMS = [
   { label: "Admin Dashboard", href: "/admin", icon: "LayoutDashboard" },
   { label: "Users", href: "/admin/users", icon: "Users" },
   { label: "Courses", href: "/admin/courses", icon: "BookOpen" },
-  { label: "Categories", href: "/admin/categories", icon: "FolderTree" },
+  { label: "Categories", href: "/admin/courses", icon: "FolderTree" },
   { label: "Enrollments", href: "/admin/enrollments", icon: "GraduationCap" },
   { label: "Payments", href: "/admin/payments", icon: "CreditCard" },
   { label: "Blog", href: "/admin/blog", icon: "PenTool" },
-  { label: "Reviews", href: "/admin/reviews", icon: "Star" },
+  { label: "Testimonials", href: "/admin/testimonials", icon: "Star" },
   { label: "Discounts", href: "/admin/discounts", icon: "Tag" },
-  { label: "FAQs", href: "/admin/faqs", icon: "HelpCircle" },
+  { label: "FAQs", href: "/admin/faq", icon: "HelpCircle" },
   { label: "Testimonials", href: "/admin/testimonials", icon: "Quote" },
   { label: "Messages", href: "/admin/messages", icon: "Mail" },
-  { label: "Analytics", href: "/admin/analytics", icon: "BarChart3" },
+  { label: "Activity", href: "/admin/activity", icon: "BarChart3" },
   { label: "Settings", href: "/admin/settings", icon: "Settings" },
 ] as const;
 
 export const STUDENT_NAV_ITEMS = [
-  { label: "My Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
+  { label: "My Dashboard", href: "/student", icon: "LayoutDashboard" },
   { label: "Browse Courses", href: "/courses", icon: "Compass" },
-  { label: "My Enrollments", href: "/dashboard/enrollments", icon: "BookOpen" },
-  { label: "Assignments", href: "/dashboard/assignments", icon: "FileText" },
-  { label: "Certificates", href: "/dashboard/certificates", icon: "Award" },
-  { label: "My Reviews", href: "/dashboard/reviews", icon: "Star" },
-  { label: "Profile", href: "/dashboard/profile", icon: "User" },
+  { label: "My Enrollments", href: "/student/courses", icon: "BookOpen" },
+  { label: "Assignments", href: "/student/assignments", icon: "FileText" },
+  { label: "Certificates", href: "/student/certificates", icon: "Award" },
+  { label: "Profile", href: "/student/profile", icon: "User" },
 ] as const;

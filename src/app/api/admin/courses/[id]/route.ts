@@ -1,6 +1,20 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { z } from "zod";
+
+const updateCourseSchema = z.object({
+  title: z.string().min(1).optional(),
+  description: z.string().optional(),
+  shortDescription: z.string().optional(),
+  level: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
+  price: z.number().min(0).optional(),
+  discountPrice: z.number().min(0).nullable().optional(),
+  isPublished: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+  tags: z.array(z.string()).optional(),
+  categoryId: z.string().uuid().optional(),
+});
 
 export async function GET(
   _request: Request,
@@ -53,21 +67,18 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
+    const parsed = updateCourseSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0].message },
+        { status: 400 }
+      );
+    }
 
     const course = await prisma.course.update({
       where: { id },
-      data: {
-        title: body.title,
-        description: body.description,
-        shortDescription: body.shortDescription,
-        level: body.level,
-        price: body.price,
-        discountPrice: body.discountPrice,
-        isPublished: body.isPublished,
-        isFeatured: body.isFeatured,
-        tags: body.tags,
-        categoryId: body.categoryId,
-      },
+      data: parsed.data,
     });
 
     return NextResponse.json({ success: true, data: course });

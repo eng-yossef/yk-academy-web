@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { z } from "zod";
+
+const settingsSchema = z.record(z.string(), z.string());
 
 export async function GET() {
   try {
@@ -29,8 +32,16 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
+    const parsed = settingsSchema.safeParse(body);
 
-    const upsertPromises = Object.entries(body).map(([key, value]) =>
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: "Settings must be a flat key-value object with string values" },
+        { status: 400 }
+      );
+    }
+
+    const upsertPromises = Object.entries(parsed.data).map(([key, value]) =>
       prisma.siteSetting.upsert({
         where: { key },
         update: { value: String(value) },

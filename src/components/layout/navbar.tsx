@@ -75,10 +75,10 @@ export function Navbar() {
 
           <div className="hidden items-center gap-3 md:flex">
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/login">Sign In</Link>
+              <Link href="/auth/signin">Sign In</Link>
             </Button>
             <Button size="sm" asChild>
-              <Link href="/register">Get Started</Link>
+              <Link href="/auth/signup">Get Started</Link>
             </Button>
           </div>
 
@@ -136,10 +136,10 @@ export function Navbar() {
               </nav>
               <div className="flex flex-col gap-3 border-t border-light-gray p-4">
                 <Button variant="outline" className="w-full" asChild>
-                  <Link href="/login" onClick={() => setMobileOpen(false)}>Sign In</Link>
+                  <Link href="/auth/signin" onClick={() => setMobileOpen(false)}>Sign In</Link>
                 </Button>
                 <Button className="w-full" asChild>
-                  <Link href="/register" onClick={() => setMobileOpen(false)}>Get Started</Link>
+                  <Link href="/auth/signup" onClick={() => setMobileOpen(false)}>Get Started</Link>
                 </Button>
               </div>
             </motion.div>

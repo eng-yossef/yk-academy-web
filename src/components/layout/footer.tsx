@@ -9,16 +9,16 @@ import { Separator } from "@/components/ui/separator";
 
 const quickLinks = [
   { href: "/courses", label: "Browse Courses" },
-  { href: "/instructors", label: "Our Instructors" },
+  { href: "/about", label: "Our Instructors" },
   { href: "/pricing", label: "Pricing" },
   { href: "/blog", label: "Blog" },
 ];
 
 const courseLinks = [
-  { href: "/courses/web-development", label: "Web Development" },
-  { href: "/courses/mobile-development", label: "Mobile Development" },
-  { href: "/courses/data-science", label: "Data Science" },
-  { href: "/courses/design", label: "UI/UX Design" },
+  { href: "/courses", label: "Web Development" },
+  { href: "/courses", label: "Mobile Development" },
+  { href: "/courses", label: "Data Science" },
+  { href: "/courses", label: "UI/UX Design" },
 ];
 
 const socialLinks = [
@@ -110,7 +110,7 @@ export function Footer() {
                   onChange={(e) => setEmail(e.target.value)}
                   className="border-white/10 bg-white/5 text-white placeholder:text-gray-500 focus-visible:ring-electric-blue"
                 />
-                <Button size="sm" className="shrink-0">Subscribe</Button>
+                <Button size="sm" className="shrink-0" onClick={() => { if (email) { alert("Thank you for subscribing!"); setEmail(""); } }}>Subscribe</Button>
               </div>
             </div>
           </div>
@@ -123,8 +123,8 @@ export function Footer() {
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} YK Academy. All rights reserved.</p>
           <div className="flex gap-4">
-            <Link href="/privacy" className="text-xs text-gray-500 transition-colors hover:text-white">Privacy Policy</Link>
-            <Link href="/terms" className="text-xs text-gray-500 transition-colors hover:text-white">Terms of Service</Link>
+            <Link href="/about" className="text-xs text-gray-500 transition-colors hover:text-white">Privacy Policy</Link>
+            <Link href="/about" className="text-xs text-gray-500 transition-colors hover:text-white">Terms of Service</Link>
           </div>
         </div>
       </div>

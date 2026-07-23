@@ -13,7 +13,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (status === "unauthenticated") {
       router.push("/auth/signin");
     } else if (status === "authenticated" && !["ADMIN", "SUPER_ADMIN"].includes(session.user.role)) {
-      router.push("/dashboard");
+      router.push("/");
     }
   }, [status, session, router]);
 

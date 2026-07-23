@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { z } from "zod";
 
 export async function GET(request: Request) {
   try {
@@ -61,6 +62,19 @@ export async function GET(request: Request) {
   }
 }
 
+const createCourseSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  shortDescription: z.string().optional(),
+  level: z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED"]).optional(),
+  categoryId: z.string().uuid("Invalid category ID"),
+  price: z.number().min(0).optional(),
+  discountPrice: z.number().min(0).nullable().optional(),
+  tags: z.array(z.string()).optional(),
+  isPublished: z.boolean().optional(),
+  instructorId: z.string().uuid().optional(),
+});
+
 export async function POST(request: Request) {
   try {
     const session = await auth();
@@ -69,7 +83,16 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, description, shortDescription, level, categoryId, price, discountPrice, tags, isPublished, instructorId } = body;
+    const parsed = createCourseSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0].message },
+        { status: 400 }
+      );
+    }
+
+    const { title, description, shortDescription, level, categoryId, price, discountPrice, tags, isPublished, instructorId } = parsed.data;
 
     const slug = title
       .toLowerCase()

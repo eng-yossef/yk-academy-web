@@ -1,6 +1,20 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { z } from "zod";
+
+const createBlogSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
+  excerpt: z.string().optional(),
+  coverImage: z.string().optional(),
+  category: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).optional(),
+  seoTitle: z.string().optional(),
+  seoDescription: z.string().optional(),
+  seoKeywords: z.array(z.string()).optional(),
+});
 
 export async function GET(request: Request) {
   try {
@@ -44,7 +58,16 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { title, content, excerpt, coverImage, category, tags, status, seoTitle, seoDescription, seoKeywords } = body;
+    const parsed = createBlogSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { success: false, error: parsed.error.issues[0].message },
+        { status: 400 }
+      );
+    }
+
+    const { title, content, excerpt, coverImage, category, tags, status, seoTitle, seoDescription, seoKeywords } = parsed.data;
 
     const slug = title
       .toLowerCase()

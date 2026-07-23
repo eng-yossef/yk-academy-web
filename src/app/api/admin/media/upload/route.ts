@@ -4,6 +4,24 @@ import prisma from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
+const ALLOWED_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "application/pdf",
+  "application/zip",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "video/mp4",
+]);
+
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
 export async function POST(request: Request) {
   try {
     const session = await auth();
@@ -13,10 +31,25 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const folder = (formData.get("folder") as string) || "uploads";
+    const rawFolder = (formData.get("folder") as string) || "uploads";
+    const folder = rawFolder.replace(/\.\./g, "").replace(/[/\\]/g, "");
 
     if (!file) {
       return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
+    }
+
+    if (!ALLOWED_TYPES.has(file.type)) {
+      return NextResponse.json(
+        { success: false, error: `File type "${file.type}" is not allowed` },
+        { status: 400 }
+      );
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { success: false, error: "File size exceeds 50MB limit" },
+        { status: 400 }
+      );
     }
 
     const bytes = await file.arrayBuffer();

@@ -32,24 +32,22 @@ interface SidebarProps {
 }
 
 const adminLinks = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/courses", label: "Courses", icon: BookOpen },
-  { href: "/admin/students", label: "Students", icon: Users },
-  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/admin/announcements", label: "Announcements", icon: Bell },
-  { href: "/admin/calendar", label: "Calendar", icon: Calendar },
-  { href: "/admin/messages", label: "Messages", icon: MessageSquare },
-  { href: "/admin/resources", label: "Resources", icon: FileText },
+  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/activity", label: "Activity", icon: BarChart3 },
+  { href: "/admin/blog", label: "Blog", icon: Bell },
+  { href: "/admin/media", label: "Media", icon: FileText },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 const studentLinks = [
-  { href: "/student/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/student", label: "Dashboard", icon: LayoutDashboard },
   { href: "/student/courses", label: "My Courses", icon: BookOpen },
-  { href: "/student/schedule", label: "Schedule", icon: Calendar },
-  { href: "/student/messages", label: "Messages", icon: MessageSquare },
-  { href: "/student/resources", label: "Resources", icon: FileText },
-  { href: "/student/settings", label: "Settings", icon: Settings },
+  { href: "/student/calendar", label: "Calendar", icon: Calendar },
+  { href: "/student/notifications", label: "Notifications", icon: Bell },
+  { href: "/student/downloads", label: "Downloads", icon: FileText },
+  { href: "/student/profile", label: "Profile", icon: Settings },
 ];
 
 export function Sidebar({ role = "student", collapsed = false, onToggle }: SidebarProps) {

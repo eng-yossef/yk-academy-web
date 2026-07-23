@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
+const VALID_ROLES = ["STUDENT", "PARENT", "TEACHER", "ASSISTANT", "CONTENT_EDITOR", "MODERATOR", "ADMIN", "SUPER_ADMIN"];
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -50,6 +52,20 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
+
+    if (body.role && !VALID_ROLES.includes(body.role)) {
+      return NextResponse.json(
+        { success: false, error: `Invalid role. Must be one of: ${VALID_ROLES.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    if (body.role === "SUPER_ADMIN" && session.user.role !== "SUPER_ADMIN") {
+      return NextResponse.json(
+        { success: false, error: "Only SUPER_ADMIN can assign SUPER_ADMIN role" },
+        { status: 403 }
+      );
+    }
 
     const user = await prisma.user.update({
       where: { id },
