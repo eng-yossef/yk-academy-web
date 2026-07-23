@@ -1,0 +1,885 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ──────────────────────────────────────────────
+// Enums
+// ──────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  PARENT
+  TEACHER
+  ASSISTANT
+  CONTENT_EDITOR
+  MODERATOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum EnrollmentStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  SUSPENDED
+  CANCELLED
+}
+
+enum LessonProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum AssignmentType {
+  HOMEWORK
+  QUIZ
+  EXAM
+  PROJECT
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  GRADED
+  RETURNED
+  LATE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PaymentMethod {
+  STRIPE
+  PAYMOB
+  FAWRY
+  VODAFONE_CASH
+  INSTAPAY
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  COURSE
+  ASSIGNMENT
+  PAYMENT
+  SYSTEM
+}
+
+enum SettingType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+  TEXT
+}
+
+enum ContactStatus {
+  UNREAD
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// ──────────────────────────────────────────────
+// Auth Models
+// ──────────────────────────────────────────────
+
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  email           String    @unique
+  password        String?
+  name            String
+  nameAr          String?
+  image           String?
+  phone           String?
+  role            Role      @default(STUDENT)
+  emailVerified   DateTime?
+  twoFactorEnabled Boolean  @default(false)
+  isActive        Boolean   @default(true)
+  lastLoginAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  accounts          Account[]
+  sessions          Session[]
+  enrollments       Enrollment[]
+  taughtCourses     Course[]            @relation("CourseInstructor")
+  assignments       Assignment[]        @relation("AssignmentTeacher")
+  grades            Grade[]
+  attendance        Attendance[]
+  notifications     Notification[]
+  certificates      Certificate[]
+  blogPosts         BlogPost[]          @relation("BlogAuthor")
+  blogComments      BlogComment[]
+  sentMessages      Message[]           @relation("MessageSender")
+  receivedMessages  Message[]           @relation("MessageReceiver")
+  payments          Payment[]
+  invoices          Invoice[]
+  activityLogs      ActivityLog[]
+  reviews           Review[]
+  bookmarks         Bookmark[]
+  lessonProgress    LessonProgress[]
+  submissions       AssignmentSubmission[] @relation("SubmissionStudent")
+  mediaLibrary      MediaLibrary[]
+
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+  @@index([deletedAt])
+}
+
+model Account {
+  id                String  @id @default(uuid()) @db.Uuid
+  userId            String  @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(uuid()) @db.Uuid
+  sessionToken String   @unique
+  userId       String   @db.Uuid
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ──────────────────────────────────────────────
+// Course Models
+// ──────────────────────────────────────────────
+
+model CourseCategory {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  nameAr      String?
+  slug        String   @unique
+  description String?
+  image       String?
+  icon        String?
+  color       String?
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  courses Course[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@index([order])
+}
+
+model Course {
+  id              String      @id @default(uuid()) @db.Uuid
+  title           String
+  titleAr         String?
+  slug            String      @unique
+  description     String
+  shortDescription String?
+  image           String?
+  video           String?
+  level           CourseLevel @default(BEGINNER)
+  language        String      @default("ar")
+  duration        Int?
+  price           Float       @default(0)
+  discountPrice   Float?
+  maxStudents     Int?
+  enrolledCount   Int         @default(0)
+  rating          Float       @default(0)
+  reviewCount     Int         @default(0)
+  isPublished     Boolean     @default(false)
+  isFeatured      Boolean     @default(false)
+  isFree          Boolean     @default(false)
+  tags            String[]
+  requirements    String[]
+  learningOutcomes String[]
+  prerequisites   String[]
+  syllabus        Json?
+  metadata        Json?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  deletedAt       DateTime?
+
+  categoryId String  @db.Uuid
+  category   CourseCategory @relation(fields: [categoryId], references: [id])
+
+  instructorId String  @db.Uuid
+  instructor   User    @relation("CourseInstructor", fields: [instructorId], references: [id])
+
+  modules         Module[]
+  enrollments     Enrollment[]
+  reviews         Review[]
+  assignments     Assignment[]
+  resources       Resource[]
+  grades          Grade[]
+  attendance      Attendance[]
+  certificates    Certificate[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([instructorId])
+  @@index([isPublished])
+  @@index([isFeatured])
+  @@index([deletedAt])
+  @@index([level])
+}
+
+model Module {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  description String?
+  order       Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  courseId String @db.Uuid
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  lessons Lesson[]
+
+  @@index([courseId])
+  @@index([order])
+}
+
+model Lesson {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  description String?
+  content     String?
+  videoUrl    String?
+  duration    Int?
+  order       Int      @default(0)
+  isFree      Boolean  @default(false)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  moduleId String @db.Uuid
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  progress   LessonProgress[]
+  bookmarks  Bookmark[]
+  resources  Resource[]
+
+  @@index([moduleId])
+  @@index([order])
+}
+
+// ──────────────────────────────────────────────
+// Enrollment & Progress
+// ──────────────────────────────────────────────
+
+model Enrollment {
+  id            String           @id @default(uuid()) @db.Uuid
+  status        EnrollmentStatus @default(PENDING)
+  enrolledAt    DateTime         @default(now())
+  completedAt   DateTime?
+  certificateId String?          @db.Uuid
+  progress      Float            @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  userId   String @db.Uuid
+  user     User   @relation(fields: [userId], references: [id])
+
+  courseId String @db.Uuid
+  course   Course @relation(fields: [courseId], references: [id])
+
+  progressRecords LessonProgress[]
+  payments        Payment[]
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+  @@index([status])
+}
+
+model LessonProgress {
+  id             String               @id @default(uuid()) @db.Uuid
+  status         LessonProgressStatus @default(NOT_STARTED)
+  progress       Float                @default(0)
+  completedAt    DateTime?
+  lastAccessedAt DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  userId       String @db.Uuid
+  user         User   @relation(fields: [userId], references: [id])
+
+  lessonId     String @db.Uuid
+  lesson       Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  enrollmentId String @db.Uuid
+  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([lessonId])
+  @@index([enrollmentId])
+}
+
+// ──────────────────────────────────────────────
+// Assignments & Grades
+// ──────────────────────────────────────────────
+
+model Assignment {
+  id          String         @id @default(uuid()) @db.Uuid
+  title       String
+  description String?
+  dueDate     DateTime?
+  totalPoints Int            @default(100)
+  type        AssignmentType @default(HOMEWORK)
+  isPublished Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  courseId   String @db.Uuid
+  course     Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  teacherId  String @db.Uuid
+  teacher    User   @relation("AssignmentTeacher", fields: [teacherId], references: [id])
+
+  submissions AssignmentSubmission[]
+  grades      Grade[]
+
+  @@index([courseId])
+  @@index([teacherId])
+  @@index([type])
+  @@index([dueDate])
+}
+
+model AssignmentSubmission {
+  id          String           @id @default(uuid()) @db.Uuid
+  content     String?
+  fileUrl     String?
+  grade       Float?
+  feedback    String?
+  status      SubmissionStatus @default(SUBMITTED)
+  submittedAt DateTime         @default(now())
+  gradedAt    DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  assignmentId String     @db.Uuid
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  studentId String @db.Uuid
+  student   User   @relation("SubmissionStudent", fields: [studentId], references: [id])
+
+  @@unique([assignmentId, studentId])
+  @@index([assignmentId])
+  @@index([studentId])
+  @@index([status])
+}
+
+model Grade {
+  id     String @id @default(uuid()) @db.Uuid
+  score  Float
+  maxScore Float @default(100)
+  percentage Float @default(0)
+  letterGrade String?
+  feedback    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId       String     @db.Uuid
+  user         User       @relation(fields: [userId], references: [id])
+
+  courseId     String     @db.Uuid
+  course       Course     @relation(fields: [courseId], references: [id])
+
+  assignmentId String?    @db.Uuid
+  assignment   Assignment? @relation(fields: [assignmentId], references: [id])
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([assignmentId])
+}
+
+model Attendance {
+  id        String           @id @default(uuid()) @db.Uuid
+  date      DateTime         @default(now())
+  status    AttendanceStatus @default(PRESENT)
+  note      String?
+  createdAt DateTime         @default(now())
+
+  userId   String @db.Uuid
+  user     User   @relation(fields: [userId], references: [id])
+
+  courseId String @db.Uuid
+  course   Course @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId, date])
+  @@index([userId])
+  @@index([courseId])
+  @@index([date])
+}
+
+// ──────────────────────────────────────────────
+// Certificates & Reviews
+// ──────────────────────────────────────────────
+
+model Certificate {
+  id               String   @id @default(uuid()) @db.Uuid
+  certificateNumber String  @unique
+  issuedAt         DateTime @default(now())
+  template         String?
+  pdfUrl           String?
+  verificationUrl  String?
+  createdAt        DateTime @default(now())
+
+  userId   String @db.Uuid
+  user     User   @relation(fields: [userId], references: [id])
+
+  courseId String @db.Uuid
+  course   Course @relation(fields: [courseId], references: [id])
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([certificateNumber])
+}
+
+model Review {
+  id        String   @id @default(uuid()) @db.Uuid
+  rating    Int
+  comment   String?
+  isApproved Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId   String @db.Uuid
+  user     User   @relation(fields: [userId], references: [id])
+
+  courseId String @db.Uuid
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+  @@index([rating])
+}
+
+// ──────────────────────────────────────────────
+// Blog
+// ──────────────────────────────────────────────
+
+model BlogPost {
+  id             String     @id @default(uuid()) @db.Uuid
+  title          String
+  slug           String     @unique
+  content        String
+  excerpt        String?
+  coverImage     String?
+  category       String?
+  tags           String[]
+  status         BlogStatus @default(DRAFT)
+  publishedAt    DateTime?
+  readingTime    Int?
+  views          Int        @default(0)
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String[]
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  deletedAt      DateTime?
+
+  authorId String @db.Uuid
+  author   User   @relation("BlogAuthor", fields: [authorId], references: [id])
+
+  comments BlogComment[]
+
+  @@index([slug])
+  @@index([authorId])
+  @@index([status])
+  @@index([publishedAt])
+  @@index([deletedAt])
+}
+
+model BlogComment {
+  id        String   @id @default(uuid()) @db.Uuid
+  content   String
+  isApproved Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  postId   String @db.Uuid
+  post     BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  userId   String @db.Uuid
+  user     User   @relation(fields: [userId], references: [id])
+
+  parentId String? @db.Uuid
+  parent   BlogComment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies  BlogComment[] @relation("CommentReplies")
+
+  @@index([postId])
+  @@index([userId])
+  @@index([parentId])
+}
+
+// ──────────────────────────────────────────────
+// FAQ & Testimonials
+// ──────────────────────────────────────────────
+
+model FAQ {
+  id        String   @id @default(uuid()) @db.Uuid
+  question  String
+  answer    String
+  category  String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+  @@index([order])
+}
+
+model Testimonial {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  role      String?
+  content   String
+  image     String?
+  rating    Int?
+  isFeatured Boolean @default(false)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isFeatured])
+  @@index([isActive])
+}
+
+// ──────────────────────────────────────────────
+// Payments & Invoices
+// ──────────────────────────────────────────────
+
+model Payment {
+  id             String        @id @default(uuid()) @db.Uuid
+  amount         Float
+  currency       String        @default("EGP")
+  method         PaymentMethod
+  status         PaymentStatus @default(PENDING)
+  transactionId  String?
+  invoiceNumber  String?
+  discountCode   String?
+  discountAmount Float         @default(0)
+  metadata       Json?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  userId       String      @db.Uuid
+  user         User        @relation(fields: [userId], references: [id])
+
+  enrollmentId String      @db.Uuid
+  enrollment   Enrollment  @relation(fields: [enrollmentId], references: [id])
+
+  invoice Invoice?
+
+  @@index([userId])
+  @@index([enrollmentId])
+  @@index([status])
+  @@index([transactionId])
+}
+
+model Invoice {
+  id            String        @id @default(uuid()) @db.Uuid
+  invoiceNumber String        @unique
+  amount        Float
+  tax           Float         @default(0)
+  discount      Float         @default(0)
+  total         Float
+  status        InvoiceStatus @default(PENDING)
+  issuedAt      DateTime      @default(now())
+  dueAt         DateTime?
+  paidAt        DateTime?
+  pdfUrl        String?
+  createdAt     DateTime      @default(now())
+
+  userId    String @db.Uuid
+  user      User   @relation(fields: [userId], references: [id])
+
+  paymentId String @unique @db.Uuid
+  payment   Payment @relation(fields: [paymentId], references: [id])
+
+  @@index([userId])
+  @@index([invoiceNumber])
+  @@index([status])
+}
+
+// ──────────────────────────────────────────────
+// Messaging & Notifications
+// ──────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  title     String
+  message   String
+  type      NotificationType @default(INFO)
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Message {
+  id        String    @id @default(uuid()) @db.Uuid
+  subject   String?
+  content   String
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  senderId   String @db.Uuid
+  sender     User   @relation("MessageSender", fields: [senderId], references: [id])
+
+  receiverId String @db.Uuid
+  receiver   User   @relation("MessageReceiver", fields: [receiverId], references: [id])
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// ──────────────────────────────────────────────
+// Resources & Bookmarks
+// ──────────────────────────────────────────────
+
+model Resource {
+  id            String   @id @default(uuid()) @db.Uuid
+  title         String
+  description   String?
+  fileUrl       String
+  fileType      String?
+  size          Int?
+  downloadCount Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  courseId String  @db.Uuid
+  course   Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  lessonId String? @db.Uuid
+  lesson   Lesson? @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+
+  @@index([courseId])
+  @@index([lessonId])
+}
+
+model Bookmark {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now())
+
+  userId   String @db.Uuid
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lessonId String @db.Uuid
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId])
+  @@index([lessonId])
+}
+
+// ──────────────────────────────────────────────
+// Site Settings & Content
+// ──────────────────────────────────────────────
+
+model SiteSetting {
+  id        String     @id @default(uuid()) @db.Uuid
+  key       String     @unique
+  value     String
+  group     String?
+  type      SettingType @default(STRING)
+  updatedAt DateTime   @updatedAt
+
+  @@index([key])
+  @@index([group])
+}
+
+model PageContent {
+  id          String    @id @default(uuid()) @db.Uuid
+  page        String
+  section     String
+  title       String?
+  content     Json?
+  metadata    Json?
+  isPublished Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([page, section])
+  @@index([isPublished])
+}
+
+model MediaLibrary {
+  id           String   @id @default(uuid()) @db.Uuid
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  alt          String?
+  folder       String?
+  createdAt    DateTime @default(now())
+
+  uploadedBy String  @db.Uuid
+  uploader   User    @relation(fields: [uploadedBy], references: [id])
+
+  @@index([uploadedBy])
+  @@index([folder])
+  @@index([mimeType])
+}
+
+// ──────────────────────────────────────────────
+// Activity Logs
+// ──────────────────────────────────────────────
+
+model ActivityLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ──────────────────────────────────────────────
+// Contact & Subscribers
+// ──────────────────────────────────────────────
+
+model ContactMessage {
+  id        String        @id @default(uuid()) @db.Uuid
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  status    ContactStatus @default(UNREAD)
+  repliedAt DateTime?
+  createdAt DateTime      @default(now())
+
+  @@index([status])
+  @@index([email])
+  @@index([createdAt])
+}
+
+model Subscriber {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  name      String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([isActive])
+}
+
+// ──────────────────────────────────────────────
+// Discount Codes
+// ──────────────────────────────────────────────
+
+model DiscountCode {
+  id          String       @id @default(uuid()) @db.Uuid
+  code        String       @unique
+  description String?
+  type        DiscountType @default(PERCENTAGE)
+  value       Float
+  maxUses     Int?
+  usedCount   Int          @default(0)
+  minAmount   Float?
+  expiresAt   DateTime?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+  @@index([expiresAt])
+}

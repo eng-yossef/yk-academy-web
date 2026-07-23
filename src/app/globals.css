@@ -1,26 +1,186 @@
 @import "tailwindcss";
 
 :root {
+  --navy: #0a1628;
+  --darkBlue: #0f2042;
+  --electricBlue: #2563eb;
+  --brightBlue: #3b82f6;
+  --cyan: #06b6d4;
+  --lightGray: #f1f5f9;
+  --mediumGray: #94a3b8;
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0a1628;
+  --radius: 0.625rem;
+}
+
+.dark {
+  --background: #0a0e1a;
+  --foreground: #f1f5f9;
+  --lightGray: #1e293b;
+  --mediumGray: #64748b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-navy: var(--navy);
+  --color-darkBlue: var(--darkBlue);
+  --color-electricBlue: var(--electricBlue);
+  --color-brightBlue: var(--brightBlue);
+  --color-cyan: var(--cyan);
+  --color-lightGray: var(--lightGray);
+  --color-mediumGray: var(--mediumGray);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+  --color-ring: var(--electricBlue);
+  --color-border: #e2e8f0;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-accent-foreground: var(--foreground);
+  --color-accent: var(--lightGray);
+  --color-muted-foreground: #64748b;
+  --color-muted: #f1f5f9;
+  --color-popover-foreground: var(--foreground);
+  --color-popover: #ffffff;
+  --color-card-foreground: var(--foreground);
+  --color-card: #ffffff;
+  --color-secondary-foreground: var(--foreground);
+  --color-secondary: var(--lightGray);
+  --color-primary-foreground: #ffffff;
+  --color-primary: var(--electricBlue);
+  --color-input: #e2e8f0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    scroll-behavior: smooth;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--electricBlue) 30%, transparent);
+    color: var(--navy);
+  }
+
+  .dark ::selection {
+    background-color: color-mix(in srgb, var(--cyan) 30%, transparent);
+    color: #ffffff;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-electricBlue to-cyan bg-clip-text text-transparent;
+  }
+
+  .gradient-bg {
+    @apply bg-gradient-to-br from-electricBlue to-cyan;
+  }
+
+  .gradient-border {
+    position: relative;
+  }
+
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--electricBlue), var(--cyan));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  .glass {
+    @apply bg-white/80 backdrop-blur-xl;
+  }
+
+  .dark .glass {
+    background: rgba(15, 32, 66, 0.8);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, var(--electricBlue), var(--brightBlue), var(--cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-navy-gradient {
+    background: linear-gradient(180deg, var(--navy) 0%, var(--darkBlue) 100%);
+  }
+
+  .bg-hero-gradient {
+    background: linear-gradient(135deg, var(--navy) 0%, #0d1b3e 40%, #0f2042 70%, #0a1628 100%);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--lightGray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--electricBlue), var(--cyan));
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--brightBlue), var(--electricBlue));
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 5s ease infinite;
 }
