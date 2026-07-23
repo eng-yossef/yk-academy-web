@@ -1,0 +1,63 @@
+﻿
+> yk-academy-web@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.2.11 (Turbopack)
+- Environments: .env
+
+node.exe : ΓÜá The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: 
+https://nextjs.org/docs/messages/middleware-to-proxy
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ΓÜá The "middle...leware-to-proxy:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Creating an optimized production build ...
+Turbopack build encountered 2 warnings:
+./tailwind.config.ts:74:49
+Module not found: Can't resolve '@tailwindcss/forms'
+  [90m72 |[0m     },
+  [90m73 |[0m   },
+[31m[1m>[0m [90m74 |[0m   plugins: [require([32m"@tailwindcss/typography"[0m), 
+require([32m"@tailwindcss/forms"[0m)],
+  [90m   |[0m                                                 [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m75 |[0m };
+  [90m76 |[0m
+  [90m77 |[0m [36mexport[0m [36mdefault[0m config;
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./tailwind.config.ts:74:13
+Module not found: Can't resolve '@tailwindcss/typography'
+  [90m72 |[0m     },
+  [90m73 |[0m   },
+[31m[1m>[0m [90m74 |[0m   plugins: [require([32m"@tailwindcss/typography"[0m), 
+require([32m"@tailwindcss/forms"[0m)],
+  [90m   |[0m             [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m75 |[0m };
+  [90m76 |[0m
+  [90m77 |[0m [36mexport[0m [36mdefault[0m config;
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+Γ£ô Compiled successfully in 49s
+  Running TypeScript ...
+Failed to type check.
+
+./src/app/(dashboard)/admin/courses/page.tsx:227:11
+Type error: Cannot find name 'BookOpen'.
+
+  [90m225 |[0m
+  [90m226 |[0m [36mfunction[0m [33mBookOpenIcon[0m() {
+[31m[1m>[0m [90m227 |[0m   [36mreturn[0m <[33mBookOpen[0m className=[32m"h-8 w-8"[0m />;
+  [90m    |[0m           [31m[1m^[0m
+  [90m228 |[0m }
+  [90m229 |[0m
+Next.js build worker exited with code: 1 and signal: null
