@@ -173,6 +173,7 @@ export default function ResetPasswordPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-mediumGray hover:text-navy"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -202,6 +203,7 @@ export default function ResetPasswordPage() {
                   type="button"
                   onClick={() => setShowConfirm(!showConfirm)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-mediumGray hover:text-navy"
+                  aria-label={showConfirm ? "Hide password" : "Show password"}
                 >
                   {showConfirm ? (
                     <EyeOff className="h-4 w-4" />
