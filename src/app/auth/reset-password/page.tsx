@@ -63,7 +63,7 @@ export default function ResetPasswordPage() {
 
   if (!token) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-lightGray/50 px-4 py-12">
+      <main className="flex min-h-screen items-center justify-center bg-lightGray/50 px-4 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -87,13 +87,13 @@ export default function ResetPasswordPage() {
             </Button>
           </div>
         </motion.div>
-      </div>
+      </main>
     );
   }
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-lightGray/50 px-4 py-12">
+      <main className="flex min-h-screen items-center justify-center bg-lightGray/50 px-4 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -120,12 +120,12 @@ export default function ResetPasswordPage() {
             </Button>
           </div>
         </motion.div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-lightGray/50 px-4 py-12">
+    <main className="flex min-h-screen items-center justify-center bg-lightGray/50 px-4 py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -230,6 +230,6 @@ export default function ResetPasswordPage() {
           </Link>
         </p>
       </motion.div>
-    </div>
+    </main>
   );
 }

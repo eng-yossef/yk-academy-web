@@ -100,7 +100,7 @@ export default function AdminCoursesPage() {
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
           <SearchInput placeholder="Search courses..." value={search} onChange={setSearch} className="w-full sm:w-72" />
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-40">
+            <SelectTrigger className="w-full sm:w-40" aria-label="Filter by status">
               <Filter className="mr-2 h-4 w-4" />
               <SelectValue placeholder="Status" />
             </SelectTrigger>
