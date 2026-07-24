@@ -85,6 +85,7 @@ export function Navbar() {
           <button
             className="inline-flex items-center justify-center rounded-lg p-2 text-navy md:hidden"
             onClick={() => setMobileOpen(true)}
+            aria-label="Open menu"
           >
             <Menu className="h-6 w-6" />
           </button>
@@ -113,6 +114,7 @@ export function Navbar() {
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="rounded-lg p-2 text-navy hover:bg-light-gray"
+                  aria-label="Close menu"
                 >
                   <X className="h-5 w-5" />
                 </button>

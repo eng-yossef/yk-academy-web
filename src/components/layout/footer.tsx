@@ -121,10 +121,10 @@ export function Footer() {
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-          <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} YK Academy. All rights reserved.</p>
+          <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} YK Academy. All rights reserved.</p>
           <div className="flex gap-4">
-            <Link href="/about" className="text-xs text-gray-500 transition-colors hover:text-white">Privacy Policy</Link>
-            <Link href="/about" className="text-xs text-gray-500 transition-colors hover:text-white">Terms of Service</Link>
+            <Link href="/about" className="text-xs text-gray-400 transition-colors hover:text-white">Privacy Policy</Link>
+            <Link href="/about" className="text-xs text-gray-400 transition-colors hover:text-white">Terms of Service</Link>
           </div>
         </div>
       </div>

@@ -813,15 +813,18 @@ function TestimonialsSection() {
               <div className="mt-6 flex items-center justify-center gap-4">
                 <button
                   onClick={prev}
+                  aria-label="Previous testimonial"
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-lightGray bg-white text-navy transition-colors hover:bg-electricBlue hover:text-white"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
-                <div className="flex gap-2">
+                <div className="flex gap-2" role="group" aria-label="Testimonial navigation">
                   {testimonials.map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setCurrent(i)}
+                      aria-label={`Go to testimonial ${i + 1}`}
+                      aria-pressed={i === current}
                       className={`h-2 rounded-full transition-all duration-300 ${
                         i === current
                           ? "w-8 bg-electricBlue"
@@ -832,6 +835,7 @@ function TestimonialsSection() {
                 </div>
                 <button
                   onClick={next}
+                  aria-label="Next testimonial"
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-lightGray bg-white text-navy transition-colors hover:bg-electricBlue hover:text-white"
                 >
                   <ChevronRight className="h-5 w-5" />
